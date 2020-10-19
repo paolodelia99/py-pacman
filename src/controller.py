@@ -1,6 +1,8 @@
 import pygame as pg
 import pygame_menu
+
 from pygame_menu.themes import Theme
+from src.game import Game
 
 
 class Controller(object):
@@ -13,8 +15,8 @@ class Controller(object):
         )
 
     def load_level(self):
-        print('loading the level...')
-        pass
+        game = Game(self.screen)
+        game.start_game()
 
     def load_menu(self):
         menu = pygame_menu.Menu(400, 600, 'Welcome',

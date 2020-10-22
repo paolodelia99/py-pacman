@@ -5,7 +5,7 @@ class Map:
 
     def __init__(self, layout_name):
         self.layout_name = layout_name
-        self.map_matrix = np.loadtxt(self.layout_name)
+        self.map_matrix = np.loadtxt(self.layout_name).astype(int)
 
     def is_wall(self, x: int, y: int) -> bool:
         return self.map_matrix[x:int, y:int] == 0
@@ -21,3 +21,7 @@ class Map:
 
     def remove_biscuit_pill(self, x: int, y: int):
         self.map_matrix[x:int, y:int] = 2
+
+    def update_ghosts_pos(self):
+        pass
+

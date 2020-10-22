@@ -13,9 +13,10 @@ class Game(object):
     def __init__(self, screen, layout_name):
         self.screen = screen
         self.layout_name = layout_name
+        self.layout_path = os.path.join('..', 'res', 'layouts', layout_name + '.lay')
         self.lvl_width = 0
         self.lvl_height = 0
-        self.map = {}
+        self.map_ = Map(self.layout_path)
         self.pellets = 0
 
         self.edge_light_color = (0, 0, 0, 255)
@@ -32,9 +33,6 @@ class Game(object):
         self.tile_id = {}
         self.tile_id_image = {}
 
-    def load_map(self):
-        map_ = Map(self.layout_name)
-
     def load_assets(self):
         pass
 
@@ -46,7 +44,6 @@ class Game(object):
 
     def start_game(self):
         self.load_assets()
-        self.load_map()
         self.game_loop()
 
     def game_loop(self):

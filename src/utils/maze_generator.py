@@ -1,6 +1,6 @@
 import numpy as np
 
-filename = '../../res/layouts/classic-layout.lay'
+filename = '../../res/layouts/classic.lay'
 
 # WALL 0
 # BISCUTS 1

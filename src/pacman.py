@@ -35,14 +35,14 @@ class Pacman(object):
     def load_frames(self):
         for i in range(1, 9):
             self.anim_pacmanL[i] = pg.image.load(
-                os.path.join("../res", "sprite", "pacman-l " + str(i) + ".gif")).convert()
+                os.path.join("res", "sprite", "pacman-l " + str(i) + ".gif")).convert()
             self.anim_pacmanR[i] = pg.image.load(
-                os.path.join("../res", "sprite", "pacman-r " + str(i) + ".gif")).convert()
+                os.path.join("res", "sprite", "pacman-r " + str(i) + ".gif")).convert()
             self.anim_pacmanU[i] = pg.image.load(
-                os.path.join("../res", "sprite", "pacman-u " + str(i) + ".gif")).convert()
+                os.path.join("res", "sprite", "pacman-u " + str(i) + ".gif")).convert()
             self.anim_pacmanD[i] = pg.image.load(
-                os.path.join("../res", "sprite", "pacman-d " + str(i) + ".gif")).convert()
-            self.anim_pacmanS[i] = pg.image.load(os.path.join("../res", "sprite", "pacman.gif")).convert()
+                os.path.join("res", "sprite", "pacman-d " + str(i) + ".gif")).convert()
+            self.anim_pacmanS[i] = pg.image.load(os.path.join("res", "sprite", "pacman.gif")).convert()
 
     def load_sounds(self):
         pass

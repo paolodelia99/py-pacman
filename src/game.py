@@ -13,7 +13,7 @@ class Game(object):
     def __init__(self, screen, layout_name):
         self.screen = screen
         self.layout_name = layout_name
-        self.layout_path = os.path.join('..', 'res', 'layouts', layout_name + '.lay')
+        self.layout_path = os.path.join('res', 'layouts', layout_name + '.lay')
         self.lvl_width = 0
         self.lvl_height = 0
         self.map_ = Map(self.layout_path)

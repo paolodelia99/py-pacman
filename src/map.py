@@ -25,3 +25,5 @@ class Map:
     def update_ghosts_pos(self):
         pass
 
+    def draw(self):
+        pass

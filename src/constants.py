@@ -24,7 +24,7 @@ TILE_LOOKUP_TABLE = {
     15: 'pellet-power.gif',
     16: 'wall-corner-ll.gif',
     17: 'wall-corner-lr.gif',
-    18: 'wall-corner-ur.gif',
+    18: 'wall-corner-ul.gif',
     19: 'wall-corner-ur.gif',
     20: 'wall-end-b.gif',
     21: 'wall-end-l.gif',
@@ -32,5 +32,11 @@ TILE_LOOKUP_TABLE = {
     23: 'wall-end-t.gif',
     24: 'wall-nub.gif',
     25: 'wall-straight-horiz.gif',
-
+    26: 'wall-straight-vert.gif',
+    27: 'wall-t-bottom.gif',
+    28: 'wall-t-left.gif',
+    29: 'wall-t-right.gif',
+    30: 'wall-t-top.gif',
+    31: 'wall-x.gif',
+    32: 'x-paintwall.gif'
 }

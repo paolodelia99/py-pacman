@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 from itertools import product
 from .constants import STATE_LOOKUP_TABLE, \
@@ -7,7 +8,7 @@ from .constants import STATE_LOOKUP_TABLE, \
     IMG_EDGE_LIGHT_COLOR, \
     IMG_EDGE_SHADOW_COLOR, \
     IMG_FILL_COLOR, \
-    IMG_PELLET_COLOR
+    IMG_PELLET_COLOR, SCREEN_WIDTH
 from .utils.functions import get_image_surface
 
 
@@ -25,8 +26,17 @@ class Map:
         self.state_matrix = self.build_state_matrix()
         self.tile_map = self.build_tile_map()
 
-    def is_wall(self, x: int, y: int) -> bool:
-        return self.state_matrix[x:int, y:int] == 2
+    def is_wall(self, row: int, col: int) -> bool:
+        if row > self.map_shape[0] or row < 0:
+            return True
+
+        if col > self.map_shape[1] or col < 0:
+            return True
+
+        if 0 <= row < self.map_shape[0] and 0 <= col < self.map_shape[1]:
+            return self.state_matrix[row][col] == 2
+        else:
+            return False
 
     def is_ghost(self, x: int, y: int) -> bool:
         return self.state_matrix[x:int, y:int] == -1
@@ -56,9 +66,10 @@ class Map:
             for j in range(self.map_matrix.shape[1]):
                 if self.map_matrix[i][j] == 33 or self.map_matrix[i][j] == 40:
                     # position of pacman or the ghost
-                    tile_map[i, j] = get_image_surface(os.path.join("res", "tiles", TILE_LOOKUP_TABLE[10]))
+                    tile_map[i, j] = get_image_surface(os.path.join(sys.path[0], "res", "tiles", TILE_LOOKUP_TABLE[10]))
                 else:
                     tile_map[i, j] = get_image_surface(os.path.join(
+                        sys.path[0],
                         "res",
                         "tiles",
                         TILE_LOOKUP_TABLE[self.map_matrix[i][j]]

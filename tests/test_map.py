@@ -12,6 +12,7 @@ def test_map_init():
     assert map_.map_matrix.min() == 10
     assert map_.map_matrix.max() == 40
     assert map_.map_matrix.dtype == int64
+    assert map_.map_matrix[16][9] == 40
 
 
 def test_state_map():

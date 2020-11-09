@@ -56,9 +56,13 @@ class Map:
             for j in range(self.map_matrix.shape[1]):
                 if self.map_matrix[i][j] == 33 or self.map_matrix[i][j] == 40:
                     # position of pacman or the ghost
-                    tile_map[i, j] = get_image_surface(os.path.join(TILE_LOOKUP_TABLE[10]))
+                    tile_map[i, j] = get_image_surface(os.path.join("res", "tiles", TILE_LOOKUP_TABLE[10]))
                 else:
-                    tile_map[i, j] = get_image_surface(TILE_LOOKUP_TABLE[self.map_matrix[i][j]])
+                    tile_map[i, j] = get_image_surface(os.path.join(
+                        "res",
+                        "tiles",
+                        TILE_LOOKUP_TABLE[self.map_matrix[i][j]]
+                    ))
                 self.recolor_tile(tile_map[i, j])
 
         return tile_map

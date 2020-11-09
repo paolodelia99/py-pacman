@@ -1,5 +1,5 @@
 import pygame as pg
 
 
-def get_image_surface(file_name: str):
-    return pg.image.load('res/tiles/' + file_name).convert()
+def get_image_surface(file_path: str):
+    return pg.image.load(file_path).convert()

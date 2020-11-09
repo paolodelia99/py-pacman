@@ -16,26 +16,18 @@ class Game(object):
         self.screen = screen
         self.layout_name = layout_name
         self.layout_path = os.path.join('res', 'layouts', layout_name + '.lay')
-        self.lvl_width = 0
-        self.lvl_height = 0
         self.map_ = Map(self.layout_path, screen)
-        self.pellets = 0
+
+        self.is_run = True
+        self.is_game_run = False
+        self.pause = False
 
         self.screen_bg = get_image_surface(os.path.join('res', 'backgrounds', '1.gif'))
-        self.edge_light_color = (0, 0, 0, 255)
-        self.edge_shadow_color = None
-        self.fill_color = None
-        self.pellet_color = None
         self.fruitType = None
 
         self.player = Pacman()
         self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, 4)]
         self.path_finder = PathFinder()
-
-        self.tile_id_name = {}
-        self.tile_id = {}
-        self.tile_id_image = {}
-        self.is_run = True
 
     def load_assets(self):
         pass
@@ -47,7 +39,7 @@ class Game(object):
         pass
 
     def init_screen(self):
-        self.screen.fill(self.screen_bg, (0, 0))
+        self.screen.blit(self.screen_bg, (0, 0))
 
     def start_game(self):
         self.load_assets()
@@ -70,6 +62,3 @@ class Game(object):
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     self.is_run = False
-
-    def is_wall(self, row, col):
-        pass

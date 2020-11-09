@@ -7,13 +7,18 @@ GHOST_COLORS = {
     5: (255, 255, 255, 255)
 }
 
+IMG_EDGE_LIGHT_COLOR = (255, 206, 255, 255)
+IMG_FILL_COLOR = (132, 0, 132, 255)
+IMG_EDGE_SHADOW_COLOR = (255, 0, 255, 255)
+IMG_PELLET_COLOR = (128, 0, 128, 255)
+
 SCREEN_TILE_SIZE_HEIGHT = 23
 SCREEN_TILE_SIZE_WIDTH = 30
 
-TILE_WIDTH = TILE_HEIGHT = 24
+TILE_SIZE = 24
 
-SCREEN_WIDTH = SCREEN_TILE_SIZE_WIDTH * TILE_WIDTH
-SCREEN_HEIGHT = SCREEN_TILE_SIZE_HEIGHT * TILE_HEIGHT
+SCREEN_WIDTH = SCREEN_TILE_SIZE_WIDTH * TILE_SIZE
+SCREEN_HEIGHT = SCREEN_TILE_SIZE_HEIGHT * TILE_SIZE
 
 TILE_LOOKUP_TABLE = {
     10: 'blank.gif',
@@ -39,4 +44,32 @@ TILE_LOOKUP_TABLE = {
     30: 'wall-t-top.gif',
     31: 'wall-x.gif',
     32: 'x-paintwall.gif'
+}
+
+STATE_LOOKUP_TABLE = {
+    10: 0,
+    11: 0,
+    12: 0,
+    13: 2,
+    14: 1,
+    15: 1,
+    16: 2,
+    17: 2,
+    18: 2,
+    19: 2,
+    20: 2,
+    21: 2,
+    22: 2,
+    23: 2,
+    24: 2,
+    25: 2,
+    26: 2,
+    27: 2,
+    28: 2,
+    29: 2,
+    30: 2,
+    31: 2,
+    32: 2,
+    33: -1,
+    40: 0
 }

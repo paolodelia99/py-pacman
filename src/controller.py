@@ -27,7 +27,7 @@ class Controller(object):
         menu = pygame_menu.Menu(SCREEN_HEIGHT, SCREEN_WIDTH,
                                 'Welcome', theme=self.menu_theme)
 
-        menu.add_button('Play', self.load_level())
+        menu.add_button('Play', self.load_level)
         menu.add_button('Quit', pygame_menu.events.EXIT)
 
         menu.mainloop(self.screen)

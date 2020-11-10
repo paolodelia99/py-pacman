@@ -54,16 +54,16 @@ class Pacman(object):
         self.x = 9 * TILE_SIZE
         self.y = 16 * TILE_SIZE
 
-    def move(self, map_: Map):
+    def move(self, maze: Map):
         self.nearest_row = int(((self.y + TILE_SIZE / 2) / TILE_SIZE))
         self.nearest_col = int(((self.x + TILE_SIZE / 2) / TILE_SIZE))
         poss_x, poss_y = self.x + self.vel_x, self.y + self.vel_y
 
-        if not self.check_hit_wall(poss_x, poss_y, map_):
+        if not self.check_hit_wall(poss_x, poss_y, maze):
             self.x += self.vel_x
             self.y += self.vel_y
 
-            self.check_if_hit_something(map_)
+            self.check_if_hit_something(maze)
         else:
             self.vel_y, self.vel_x = 0, 0
 
@@ -92,7 +92,7 @@ class Pacman(object):
             if self.anim_frame == 9:
                 self.anim_frame = 1
 
-    def check_hit_wall(self, x: int, y: int, map_: Map) -> bool:
+    def check_hit_wall(self, x: int, y: int, maze: Map) -> bool:
         num_collision = 0
 
         for row in range(self.nearest_row - 1, self.nearest_row + 2):
@@ -102,21 +102,20 @@ class Pacman(object):
                         (y - (row * TILE_SIZE) > -TILE_SIZE) and
                         (y - (row * TILE_SIZE) < TILE_SIZE)):
                     try:
-                        if map_.is_wall(row, col):
+                        if maze.is_wall(row, col):
                             num_collision += 1
                     except Exception as e:
                         print(e)
 
-        print(num_collision > 0)
         return num_collision > 0
 
-    def check_keyboard_inputs(self, map_: Map):
+    def check_keyboard_inputs(self, maze: Map):
         if pg.key.get_pressed()[pg.K_LEFT]:
             if not (self.vel_x == -self.speed and self.vel_y == 0) \
                     and not self.check_hit_wall(
                     self.x - self.speed,
                     self.y,
-                    map_):
+                    maze):
                 self.vel_x = -self.speed
                 self.vel_y = 0
         elif pg.key.get_pressed()[pg.K_RIGHT]:
@@ -124,7 +123,7 @@ class Pacman(object):
                     and not self.check_hit_wall(
                     self.x + self.speed,
                     self.y,
-                    map_):
+                    maze):
                 self.vel_x = self.speed
                 self.vel_y = 0
         elif pg.key.get_pressed()[pg.K_UP]:
@@ -132,7 +131,7 @@ class Pacman(object):
                     and not self.check_hit_wall(
                     self.x,
                     self.y - self.speed,
-                    map_):
+                    maze):
                 self.vel_y = -self.speed
                 self.vel_x = 0
         elif pg.key.get_pressed()[pg.K_DOWN]:
@@ -140,11 +139,11 @@ class Pacman(object):
                     and not self.check_hit_wall(
                     self.x,
                     self.y + self.speed,
-                    map_):
+                    maze):
                 self.vel_y = self.speed
                 self.vel_x = 0
 
-    def check_if_hit_something(self, map_: Map):
+    def check_if_hit_something(self, maze: Map):
         for row in range(self.nearest_row - 1, self.nearest_row + 2):
             for col in range(self.nearest_col - 1, self.nearest_col + 2):
                 if ((self.x - (col * TILE_SIZE) < TILE_SIZE) and
@@ -152,29 +151,40 @@ class Pacman(object):
                         (self.y - (row * TILE_SIZE) > -TILE_SIZE) and
                         (self.y - (row * TILE_SIZE) < TILE_SIZE)):
 
-                    if map_.map_matrix[row][col] == 14:
+                    if maze.map_matrix[row][col] == 14:
                         # got a pellet
-                        map_.remove_biscuit(row, col)
+                        maze.remove_biscuit(row, col)
                         # self.snd_pellet[self.pellet_snd_num].play()
                         self.pellet_snd_num -= 1
 
                         # fixme:  add score to game
-                        if map_.get_number_of_pellets() == 0:
+                        if maze.get_number_of_pellets() == 0:
                             # fixme: add modification of the game mode
                             pass
-                    elif map_.map_matrix[row][col] == 15:
+                    elif maze.map_matrix[row][col] == 15:
                         # got a power pellet
-                        map_.remove_biscuit(row, col)
+                        maze.remove_biscuit(row, col)
                         # fixme: add self.snd_power_pellet.play()
                         # fixme: add score to game
                         # fixme: make the ghosts vulnerable
                         pass
-                    elif map_.map_matrix[row][col] == 11:
+                    elif maze.map_matrix[row][col] == 11:
                         # ran into a horizontal door
-                        for i in range(map_.shape[1]):
+                        for i in range(maze.shape[1]):
                             if not i == col:
-                                pass
-                        pass
-                    elif map_.map_matrix[row][col] == 12:
+                                if maze.map_matrix[row][i] == 11:
+                                    self.x = i * TILE_SIZE
+                                    if self.vel_x > 0:
+                                        self.x += TILE_SIZE
+                                    else:
+                                        self.x -= TILE_SIZE
+                    elif maze.map_matrix[row][col] == 12:
                         #ran into a vertical door
-                        pass
+                        for i in range(maze.shape[0]):
+                            if not i == row:
+                                if maze.map_matrix[i][col] == 12:
+                                    self.y = i * TILE_SIZE
+                                    if self.vel_y > 0:
+                                        self.y += TILE_SIZE
+                                    else:
+                                        self.y -= TILE_SIZE

@@ -22,18 +22,18 @@ class Map:
         self.layout_name = layout_name
         self.screen = screen
         self.map_matrix = np.loadtxt(self.layout_name).astype(int)
-        self.map_shape = self.map_matrix.shape
+        self.shape = self.map_matrix.shape
         self.state_matrix = self.build_state_matrix()
         self.tile_map = self.build_tile_map()
 
     def is_wall(self, row: int, col: int) -> bool:
-        if row > self.map_shape[0] or row < 0:
+        if row > self.shape[0] or row < 0:
             return True
 
-        if col > self.map_shape[1] or col < 0:
+        if col > self.shape[1] or col < 0:
             return True
 
-        if 0 <= row < self.map_shape[0] and 0 <= col < self.map_shape[1]:
+        if 0 <= row < self.shape[0] and 0 <= col < self.shape[1]:
             return self.state_matrix[row][col] == 2
         else:
             return False
@@ -61,8 +61,8 @@ class Map:
         pass
 
     def draw(self):
-        for row in range(self.map_shape[0]):
-            for col in range(self.map_shape[1]):
+        for row in range(self.shape[0]):
+            for col in range(self.shape[1]):
                 self.screen.blit(self.tile_map[row, col], (col * TILE_SIZE, row * TILE_SIZE))
 
     def build_tile_map(self):
@@ -70,7 +70,7 @@ class Map:
 
         for i in range(self.map_matrix.shape[0]):
             for j in range(self.map_matrix.shape[1]):
-                if self.map_matrix[i][j] == 33 or self.map_matrix[i][j] == 40:
+                if self.map_matrix[i][j] in [33, 40, 11, 12]:
                     # position of pacman or the ghost
                     tile_map[i, j] = get_image_surface(os.path.join(sys.path[0], "res", "tiles", TILE_LOOKUP_TABLE[10]))
                 else:

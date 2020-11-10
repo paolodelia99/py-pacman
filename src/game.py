@@ -18,7 +18,7 @@ class Game(object):
         self.screen = screen
         self.layout_name = layout_name
         self.layout_path = os.path.join('res', 'layouts', layout_name + '.lay')
-        self.map_ = Map(self.layout_path, screen)
+        self.maze = Map(self.layout_path, screen)
 
         self.is_run = True
         self.is_game_run = False
@@ -58,13 +58,13 @@ class Game(object):
             self.draw()
 
             if self.game_mode == GameMode.normal:
-                self.player.move(self.map_)
+                self.player.move(self.maze)
 
             pg.display.flip()
             clock.tick(60)
 
     def event_loop(self):
-        self.player.check_keyboard_inputs(self.map_)
+        self.player.check_keyboard_inputs(self.maze)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
@@ -74,7 +74,7 @@ class Game(object):
                     self.is_run = False
 
     def draw(self):
-        self.map_.draw()
+        self.maze.draw()
         self.player.draw(self.screen, self.game_mode)
 
     def set_game_mode(self, mode: int):

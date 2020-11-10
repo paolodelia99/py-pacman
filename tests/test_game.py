@@ -7,4 +7,4 @@ def test_load_map():
         screen=pg.display.set_mode((600, 400)),
         layout_name='classic-layout'
     )
-    assert g.map_.map_matrix.shape == (22, 19)
+    assert g.maze.map_matrix.shape == (22, 19)

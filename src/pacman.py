@@ -13,7 +13,7 @@ class Pacman(object):
         self.y = 0
         self.vel_x = 0
         self.vel_y = 0
-        self.speed = 2
+        self.speed = 3
 
         self.nearest_row = 0
         self.nearest_col = 0
@@ -54,14 +54,16 @@ class Pacman(object):
         self.x = 9 * TILE_SIZE
         self.y = 16 * TILE_SIZE
 
-    def move(self, map: Map):
+    def move(self, map_: Map):
         self.nearest_row = int(((self.y + TILE_SIZE / 2) / TILE_SIZE))
         self.nearest_col = int(((self.x + TILE_SIZE / 2) / TILE_SIZE))
         poss_x, poss_y = self.x + self.vel_x, self.y + self.vel_y
 
-        if not self.check_hit_wall(poss_x, poss_y, map):
+        if not self.check_hit_wall(poss_x, poss_y, map_):
             self.x += self.vel_x
             self.y += self.vel_y
+
+            self.check_if_hit_something(map_)
         else:
             self.vel_y, self.vel_x = 0, 0
 
@@ -107,3 +109,72 @@ class Pacman(object):
 
         print(num_collision > 0)
         return num_collision > 0
+
+    def check_keyboard_inputs(self, map_: Map):
+        if pg.key.get_pressed()[pg.K_LEFT]:
+            if not (self.vel_x == -self.speed and self.vel_y == 0) \
+                    and not self.check_hit_wall(
+                    self.x - self.speed,
+                    self.y,
+                    map_):
+                self.vel_x = -self.speed
+                self.vel_y = 0
+        elif pg.key.get_pressed()[pg.K_RIGHT]:
+            if not (self.vel_x == self.speed and self.vel_y == 0) \
+                    and not self.check_hit_wall(
+                    self.x + self.speed,
+                    self.y,
+                    map_):
+                self.vel_x = self.speed
+                self.vel_y = 0
+        elif pg.key.get_pressed()[pg.K_UP]:
+            if not (self.vel_y == -self.speed and self.vel_x == 0) \
+                    and not self.check_hit_wall(
+                    self.x,
+                    self.y - self.speed,
+                    map_):
+                self.vel_y = -self.speed
+                self.vel_x = 0
+        elif pg.key.get_pressed()[pg.K_DOWN]:
+            if not (self.vel_y == +self.speed and self.vel_x == 0) \
+                    and not self.check_hit_wall(
+                    self.x,
+                    self.y + self.speed,
+                    map_):
+                self.vel_y = self.speed
+                self.vel_x = 0
+
+    def check_if_hit_something(self, map_: Map):
+        for row in range(self.nearest_row - 1, self.nearest_row + 2):
+            for col in range(self.nearest_col - 1, self.nearest_col + 2):
+                if ((self.x - (col * TILE_SIZE) < TILE_SIZE) and
+                        (self.x - (col * TILE_SIZE) > -TILE_SIZE) and
+                        (self.y - (row * TILE_SIZE) > -TILE_SIZE) and
+                        (self.y - (row * TILE_SIZE) < TILE_SIZE)):
+
+                    if map_.map_matrix[row][col] == 14:
+                        # got a pellet
+                        map_.remove_biscuit(row, col)
+                        # self.snd_pellet[self.pellet_snd_num].play()
+                        self.pellet_snd_num -= 1
+
+                        # fixme:  add score to game
+                        if map_.get_number_of_pellets() == 0:
+                            # fixme: add modification of the game mode
+                            pass
+                    elif map_.map_matrix[row][col] == 15:
+                        # got a power pellet
+                        map_.remove_biscuit(row, col)
+                        # fixme: add self.snd_power_pellet.play()
+                        # fixme: add score to game
+                        # fixme: make the ghosts vulnerable
+                        pass
+                    elif map_.map_matrix[row][col] == 11:
+                        # ran into a horizontal door
+                        for i in range(map_.shape[1]):
+                            if not i == col:
+                                pass
+                        pass
+                    elif map_.map_matrix[row][col] == 12:
+                        #ran into a vertical door
+                        pass

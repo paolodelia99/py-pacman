@@ -47,9 +47,15 @@ class Map:
     def is_pill(self, x: int, y: int) -> bool:
         return self.map_matrix[x:int, y:int] == 15
 
-    def remove_biscuit_pill(self, x: int, y: int):
-        self.map_matrix[x:int, y:int] = 10
-        self.state_matrix[x, y] = 0
+    def remove_biscuit(self, x: int, y: int):
+        self.map_matrix[x][y] = 10
+        self.state_matrix[x][y] = 0
+        self.tile_map[x, y] = get_image_surface(os.path.join(
+                        sys.path[0],
+                        "res",
+                        "tiles",
+                        TILE_LOOKUP_TABLE[self.map_matrix[x][y]]
+                    ))
 
     def update_ghosts_pos(self):
         pass
@@ -95,6 +101,10 @@ class Map:
         neighbors_list = [get(i, j) for i, j in product(range(r - 1, r + 2), range(c - 1, c + 2))]
 
         return sum(map(bool, neighbors_list)) - 1
+
+    def get_number_of_pellets(self) -> int:
+        unique, counts = np.unique(self.map_matrix, return_counts=True)
+        return dict(zip(unique, counts))[10]
 
     def recolor_tile(self, tile):
         for y in range(0, TILE_SIZE, 1):

@@ -64,6 +64,7 @@ class Game(object):
             clock.tick(60)
 
     def event_loop(self):
+        self.player.check_keyboard_inputs(self.map_)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
@@ -71,39 +72,10 @@ class Game(object):
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     self.is_run = False
-                elif event.key == pg.K_LEFT:
-                    if not (self.player.vel_x == -self.player.speed and self.player.vel_y == 0) \
-                            and not self.player.check_hit_wall(
-                                    self.player.x - self.player.speed,
-                                    self.player.y,
-                                    self.map_):
-                        self.player.vel_x = -self.player.speed
-                        self.player.vel_y = 0
-                elif event.key == pg.K_RIGHT:
-                    if not (self.player.vel_x == self.player.speed and self.player.vel_y == 0) \
-                            and not self.player.check_hit_wall(
-                                    self.player.x + self.player.speed,
-                                    self.player.y,
-                                    self.map_):
-                        self.player.vel_x = self.player.speed
-                        self.player.vel_y = 0
-                elif event.key == pg.K_UP:
-                    if not (self.player.vel_y == -self.player.speed and self.player.vel_x == 0) \
-                            and not self.player.check_hit_wall(
-                                    self.player.x,
-                                    self.player.y - self.player.speed,
-                                    self.map_):
-                        self.player.vel_y = -self.player.speed
-                        self.player.vel_x = 0
-                elif event.key == pg.K_DOWN:
-                    if not (self.player.vel_y == +self.player.speed and self.player.vel_x == 0) \
-                            and not self.player.check_hit_wall(
-                                    self.player.x,
-                                    self.player.y + self.player.speed,
-                                    self.map_):
-                        self.player.vel_y = self.player.speed
-                        self.player.vel_x = 0
 
     def draw(self):
         self.map_.draw()
         self.player.draw(self.screen, self.game_mode)
+
+    def set_game_mode(self, mode: int):
+        self.game_mode = GameMode(mode)

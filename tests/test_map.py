@@ -24,9 +24,14 @@ def test_state_map():
 
 
 def test_tile_map():
-    map_ = Map('../res/layouts/test.lay', screen)
-    assert type(map_.tile_map) == dict
-    assert map_.tile_map.__len__() == 418
+    maze = Map('../res/layouts/test.lay', screen)
+    assert type(maze.tile_map) == dict
+    assert maze.tile_map.__len__() == 418
+
+
+def test_get_player_init_position():
+    maze = Map('../res/layouts/test.lay', screen)
+    assert maze.get_player_home() == (16, 9)
 
 
 def test_get_neighbors():
@@ -34,3 +39,5 @@ def test_get_neighbors():
     assert maze.get_neighbors(0, 0, 0) == 2
     assert maze.get_neighbors(1, 9, 0) == 4
     assert maze.get_neighbors(1, 1, 1) == 1
+
+

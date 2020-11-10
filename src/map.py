@@ -1,14 +1,16 @@
 import os
 import sys
-import numpy as np
 from itertools import product
+
+import numpy as np
+
 from .constants import STATE_LOOKUP_TABLE, \
     TILE_LOOKUP_TABLE, \
     TILE_SIZE, \
     IMG_EDGE_LIGHT_COLOR, \
     IMG_EDGE_SHADOW_COLOR, \
     IMG_FILL_COLOR, \
-    IMG_PELLET_COLOR, SCREEN_WIDTH
+    IMG_PELLET_COLOR
 from .utils.functions import get_image_surface
 
 
@@ -56,6 +58,10 @@ class Map:
                         "tiles",
                         TILE_LOOKUP_TABLE[self.map_matrix[x][y]]
                     ))
+
+    def get_player_home(self) -> tuple:
+        home_y, home_x = np.where(self.map_matrix == 40)
+        return int(home_x[0]), int(home_y[0])
 
     def update_ghosts_pos(self):
         pass

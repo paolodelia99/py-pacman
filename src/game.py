@@ -19,6 +19,7 @@ class Game(object):
         self.layout_name = layout_name
         self.layout_path = os.path.join('res', 'layouts', layout_name + '.lay')
         self.maze = Map(self.layout_path, screen)
+        self.score = 0
 
         self.is_run = True
         self.is_game_run = False
@@ -39,7 +40,8 @@ class Game(object):
         pass
 
     def init_players_in_map(self):
-        self.player.init_position()
+        home_x, home_y = self.maze.get_player_home()
+        self.player.init_position(home_x, home_y)
 
     def init_screen(self):
         self.screen.blit(self.screen_bg, (0, 0))
@@ -57,8 +59,8 @@ class Game(object):
             self.event_loop()
             self.draw()
 
-            if self.game_mode == GameMode.normal:
-                self.player.move(self.maze)
+            if self.game_mode in [GameMode.normal, GameMode.change_ghosts]:
+                self.player.move(self.maze, self)
 
             pg.display.flip()
             clock.tick(60)
@@ -76,6 +78,10 @@ class Game(object):
     def draw(self):
         self.maze.draw()
         self.player.draw(self.screen, self.game_mode)
+        # fixme: draw score and lives
 
     def set_game_mode(self, mode: int):
         self.game_mode = GameMode(mode)
+
+    def add_score(self, score_to_add: int):
+        self.score += score_to_add

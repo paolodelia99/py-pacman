@@ -1,5 +1,10 @@
+from typing import Dict
+
 import pygame as pg
 import os
+import sys
+
+from pygame.mixer import SoundType
 
 from src.constants import TILE_SIZE
 from src.map import Map
@@ -7,8 +12,13 @@ from src.utils.game_mode import GameMode
 
 
 class Pacman(object):
+    snd_power_pellet: SoundType
+    snd_eat_fruit: SoundType
+    snd_eat_gh: SoundType
+    snd_pellet: Dict[int, SoundType]
 
     def __init__(self):
+        self.lives = 3
         self.x = 0
         self.y = 0
         self.vel_x = 0
@@ -31,8 +41,6 @@ class Pacman(object):
         self.current_anim = self.anim_s
 
         self.pellet_snd_num = 0
-        self.snd_eatgh = None
-        self.snd_eatfruit = None
         self.load_sounds()
 
     def load_frames(self):
@@ -48,13 +56,19 @@ class Pacman(object):
             self.anim_s[i] = pg.image.load(os.path.join("res", "sprite", "pacman.gif")).convert()
 
     def load_sounds(self):
-        pass
+        self.snd_pellet = {
+            0: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet1.wav")),
+            1: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet2.wav"))
+        }
+        self.snd_eat_gh = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatgh2.wav"))
+        self.snd_eat_fruit = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatfruit.wav"))
+        self.snd_power_pellet = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "powerpellet.wav"))
 
-    def init_position(self):
-        self.x = 9 * TILE_SIZE
-        self.y = 16 * TILE_SIZE
+    def init_position(self, home_x: int, home_y: int):
+        self.x = home_x * TILE_SIZE
+        self.y = home_y * TILE_SIZE
 
-    def move(self, maze: Map):
+    def move(self, maze: Map, game):
         self.nearest_row = int(((self.y + TILE_SIZE / 2) / TILE_SIZE))
         self.nearest_col = int(((self.x + TILE_SIZE / 2) / TILE_SIZE))
         poss_x, poss_y = self.x + self.vel_x, self.y + self.vel_y
@@ -63,7 +77,7 @@ class Pacman(object):
             self.x += self.vel_x
             self.y += self.vel_y
 
-            self.check_if_hit_something(maze)
+            self.check_if_hit_something(maze, game)
         else:
             self.vel_y, self.vel_x = 0, 0
 
@@ -143,7 +157,7 @@ class Pacman(object):
                 self.vel_y = self.speed
                 self.vel_x = 0
 
-    def check_if_hit_something(self, maze: Map):
+    def check_if_hit_something(self, maze: Map, game):
         for row in range(self.nearest_row - 1, self.nearest_row + 2):
             for col in range(self.nearest_col - 1, self.nearest_col + 2):
                 if ((self.x - (col * TILE_SIZE) < TILE_SIZE) and
@@ -154,20 +168,19 @@ class Pacman(object):
                     if maze.map_matrix[row][col] == 14:
                         # got a pellet
                         maze.remove_biscuit(row, col)
-                        # self.snd_pellet[self.pellet_snd_num].play()
-                        self.pellet_snd_num -= 1
+                        self.snd_pellet[self.pellet_snd_num].play()
+                        self.pellet_snd_num = 1 - self.pellet_snd_num
+                        game.add_score(10)
 
-                        # fixme:  add score to game
                         if maze.get_number_of_pellets() == 0:
-                            # fixme: add modification of the game mode
-                            pass
+                            game.set_game_mode(6)
                     elif maze.map_matrix[row][col] == 15:
                         # got a power pellet
+                        game.set_game_mode(9)
                         maze.remove_biscuit(row, col)
-                        # fixme: add self.snd_power_pellet.play()
-                        # fixme: add score to game
+                        self.snd_power_pellet.play()
+                        game.add_score(100)
                         # fixme: make the ghosts vulnerable
-                        pass
                     elif maze.map_matrix[row][col] == 11:
                         # ran into a horizontal door
                         for i in range(maze.shape[1]):
@@ -179,7 +192,7 @@ class Pacman(object):
                                     else:
                                         self.x -= TILE_SIZE
                     elif maze.map_matrix[row][col] == 12:
-                        #ran into a vertical door
+                        # ran into a vertical door
                         for i in range(maze.shape[0]):
                             if not i == row:
                                 if maze.map_matrix[i][col] == 12:

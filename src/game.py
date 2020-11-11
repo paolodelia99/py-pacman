@@ -3,6 +3,7 @@ import sys
 
 import pygame as pg
 from pygame.mixer import SoundType
+from pygame.surface import SurfaceType
 
 from src.pacman import Pacman
 from .constants import GHOST_COLORS
@@ -20,6 +21,10 @@ class Game(object):
     snd_default: SoundType
     snd_death: SoundType
     screen_bg: object
+    num_digits: dict
+    imGameOver: SurfaceType
+    imReady: SurfaceType
+    imLife: SurfaceType
 
     def __init__(self, maze: Map, screen, sounds_active: bool):
         self.screen = screen
@@ -44,6 +49,13 @@ class Game(object):
 
     def load_assets(self):
         self.screen_bg = get_image_surface(os.path.join('res', 'backgrounds', '1.gif'))
+        self.num_digits = {
+            i: get_image_surface(os.path.join(sys.path[0], "res", "text", str(i) + ".gif"))
+            for i in range(0, 10)
+        }
+        self.imGameOver = get_image_surface(os.path.join(sys.path[0], "res", "text", "gameover.gif"))
+        self.imReady = get_image_surface(os.path.join(sys.path[0], "res", "text", "ready.gif"))
+        self.imLife = get_image_surface(os.path.join(sys.path[0], "res", "text", "life.gif"))
         if self.sounds_active:
             self.snd_intro = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "levelintro.wav"))
             self.snd_default = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "default.wav"))

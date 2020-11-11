@@ -14,7 +14,6 @@ from .utils.path_finder import PathFinder
 
 
 class Game(object):
-
     channel_background: pg.mixer.Channel
     clock: pg.time.Clock
     snd_intro: SoundType
@@ -22,13 +21,12 @@ class Game(object):
     snd_death: SoundType
     screen_bg: object
 
-    def __init__(self, screen, layout_name: str, sounds_active: bool):
+    def __init__(self, maze: Map, screen, sounds_active: bool):
         self.screen = screen
-        self.layout_name = layout_name
-        self.layout_path = os.path.join('res', 'layouts', layout_name + '.lay')
-        self.maze = Map(self.layout_path, screen)
         self.score = 0
         self.sounds_active = sounds_active
+        self.maze = maze
+        self.maze.build_tile_map()
 
         self.is_run = True
         self.is_game_run = False
@@ -42,7 +40,7 @@ class Game(object):
         self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, 4)]
         self.path_finder = PathFinder()
 
-        self.set_game_mode(1) # fixme : just a stub for now
+        self.set_game_mode(1)  # fixme : just a stub for now
 
     def load_assets(self):
         self.screen_bg = get_image_surface(os.path.join('res', 'backgrounds', '1.gif'))
@@ -102,9 +100,15 @@ class Game(object):
                     self.channel_background.stop()
 
     def draw(self):
-        self.maze.draw()
+        self.maze.draw(self.screen)
         self.player.draw(self.screen, self.game_mode)
         # fixme: draw score and lives
+
+    def draw_texts(self):
+        # draw_score
+        # draw_ready
+        # draw_game_over
+        pass
 
     def set_game_mode(self, mode: int):
         self.game_mode = GameMode(mode)

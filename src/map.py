@@ -16,17 +16,15 @@ from .utils.functions import get_image_surface
 
 class Map:
 
-    def __init__(self, layout_name, screen):
+    def __init__(self, layout_name):
+        self.map_matrix = np.loadtxt(os.path.join('res', 'layouts', layout_name + '.lay')).astype(int)
+        self.shape = self.map_matrix.shape
         self.edge_light_color = (0, 0, 255, 255)
         self.edge_shadow_color = (0, 0, 255, 255)
         self.fill_color = (0, 0, 0, 255)
         self.pellet_color = (255, 255, 255, 255)
         self.layout_name = layout_name
-        self.screen = screen
-        self.map_matrix = np.loadtxt(self.layout_name).astype(int)
-        self.shape = self.map_matrix.shape
         self.state_matrix = self.build_state_matrix()
-        self.tile_map = self.build_tile_map()
 
     def is_wall(self, row: int, col: int) -> bool:
         if row > self.shape[0] or row < 0:
@@ -66,29 +64,27 @@ class Map:
     def update_ghosts_pos(self):
         pass
 
-    def draw(self):
+    def draw(self, screen):
         for row in range(self.shape[0]):
             for col in range(self.shape[1]):
-                self.screen.blit(self.tile_map[row, col], (col * TILE_SIZE, row * TILE_SIZE))
+                screen.blit(self.tile_map[row, col], (col * TILE_SIZE, row * TILE_SIZE))
 
     def build_tile_map(self):
-        tile_map = {}
+        self.tile_map = {}
 
         for i in range(self.map_matrix.shape[0]):
             for j in range(self.map_matrix.shape[1]):
                 if self.map_matrix[i][j] in [33, 40, 11, 12]:
-                    # position of pacman or the ghost
-                    tile_map[i, j] = get_image_surface(os.path.join(sys.path[0], "res", "tiles", TILE_LOOKUP_TABLE[10]))
+                    # position of pacman, the ghost or the doors
+                    self.tile_map[i, j] = get_image_surface(os.path.join(sys.path[0], "res", "tiles", TILE_LOOKUP_TABLE[10]))
                 else:
-                    tile_map[i, j] = get_image_surface(os.path.join(
+                    self.tile_map[i, j] = get_image_surface(os.path.join(
                         sys.path[0],
                         "res",
                         "tiles",
                         TILE_LOOKUP_TABLE[self.map_matrix[i][j]]
                     ))
-                self.recolor_tile(tile_map[i, j])
-
-        return tile_map
+                self.recolor_tile(self.tile_map[i, j])
 
     def build_state_matrix(self) -> np.ndarray:
         state_matrix = np.ndarray(shape=(self.map_matrix.shape[0], self.map_matrix.shape[1])).astype(np.int)
@@ -131,3 +127,6 @@ class Map:
                 elif tile.get_at((x, y)) == IMG_PELLET_COLOR:
                     # pellet color
                     tile.set_at((x, y), self.pellet_color)
+
+    def get_map_sizes(self) -> tuple:
+        return self.shape[1] * TILE_SIZE, (self.shape[0] + 1) * TILE_SIZE

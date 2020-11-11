@@ -2,6 +2,7 @@ import os
 import sys
 
 import pygame as pg
+from pygame.mixer import SoundType
 
 from src.pacman import Pacman
 from .constants import GHOST_COLORS
@@ -14,30 +15,54 @@ from .utils.path_finder import PathFinder
 
 class Game(object):
 
-    def __init__(self, screen, layout_name):
+    channel_background: pg.mixer.Channel
+    clock: pg.time.Clock
+    snd_intro: SoundType
+    snd_default: SoundType
+    snd_death: SoundType
+    screen_bg: object
+
+    def __init__(self, screen, layout_name: str, sounds_active: bool):
         self.screen = screen
         self.layout_name = layout_name
         self.layout_path = os.path.join('res', 'layouts', layout_name + '.lay')
         self.maze = Map(self.layout_path, screen)
         self.score = 0
+        self.sounds_active = sounds_active
 
         self.is_run = True
         self.is_game_run = False
         self.pause = False
-        self.game_mode = GameMode(1)
 
-        self.screen_bg = get_image_surface(os.path.join('res', 'backgrounds', '1.gif'))
+        self.init_mixer()
+        self.load_assets()
         self.fruitType = None
 
-        self.player = Pacman()
+        self.player = Pacman(sounds_active=self.sounds_active)
         self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, 4)]
         self.path_finder = PathFinder()
 
-    def load_assets(self):
-        pass
+        self.set_game_mode(1) # fixme : just a stub for now
 
-    def init_game_attributes(self):
-        pass
+    def load_assets(self):
+        self.screen_bg = get_image_surface(os.path.join('res', 'backgrounds', '1.gif'))
+        if self.sounds_active:
+            self.snd_intro = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "levelintro.wav"))
+            self.snd_default = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "default.wav"))
+            self.snd_death = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "death.wav"))
+
+    def init_mixer(self):
+        pg.mixer.init()
+        pg.mixer.set_num_channels(7)
+        self.channel_background = pg.mixer.Channel(6)
+
+    def init_game(self):
+        self.clock = pg.time.Clock()
+        pg.mouse.set_visible(False)
+
+    def play_bkg_sound(self, snd):
+        self.channel_background.stop()
+        self.channel_background.play(snd, loops=-1)
 
     def init_players_in_map(self):
         home_x, home_y = self.maze.get_player_home()
@@ -51,7 +76,7 @@ class Game(object):
         self.game_loop()
 
     def game_loop(self):
-        clock = pg.time.Clock()
+        self.init_game()
         self.init_players_in_map()
 
         while self.is_run:
@@ -59,11 +84,11 @@ class Game(object):
             self.event_loop()
             self.draw()
 
-            if self.game_mode in [GameMode.normal, GameMode.change_ghosts]:
+            if self.game_mode in [GameMode.normal, GameMode.change_ghosts, GameMode.wait_after_eating_ghost]:
                 self.player.move(self.maze, self)
 
             pg.display.flip()
-            clock.tick(60)
+            self.clock.tick(60)
 
     def event_loop(self):
         self.player.check_keyboard_inputs(self.maze)
@@ -74,6 +99,7 @@ class Game(object):
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     self.is_run = False
+                    self.channel_background.stop()
 
     def draw(self):
         self.maze.draw()
@@ -82,6 +108,11 @@ class Game(object):
 
     def set_game_mode(self, mode: int):
         self.game_mode = GameMode(mode)
+        self.set_proper_bkg_music()
 
     def add_score(self, score_to_add: int):
         self.score += score_to_add
+
+    def set_proper_bkg_music(self):
+        if self.game_mode == GameMode.normal:
+            self.play_bkg_sound(self.snd_default)

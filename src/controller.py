@@ -19,7 +19,8 @@ class Controller(object):
     def load_level(self):
         game = Game(
             screen=self.screen,
-            layout_name=self.layout_name
+            layout_name=self.layout_name,
+            sounds_active=True
         )
         game.start_game()
 

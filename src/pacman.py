@@ -17,13 +17,14 @@ class Pacman(object):
     snd_eat_gh: SoundType
     snd_pellet: Dict[int, SoundType]
 
-    def __init__(self):
+    def __init__(self, sounds_active: bool):
         self.lives = 3
         self.x = 0
         self.y = 0
         self.vel_x = 0
         self.vel_y = 0
         self.speed = 3
+        self.sounds_active = sounds_active
 
         self.nearest_row = 0
         self.nearest_col = 0
@@ -56,13 +57,14 @@ class Pacman(object):
             self.anim_s[i] = pg.image.load(os.path.join("res", "sprite", "pacman.gif")).convert()
 
     def load_sounds(self):
-        self.snd_pellet = {
-            0: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet1.wav")),
-            1: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet2.wav"))
-        }
-        self.snd_eat_gh = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatgh2.wav"))
-        self.snd_eat_fruit = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatfruit.wav"))
-        self.snd_power_pellet = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "powerpellet.wav"))
+        if self.sounds_active:
+            self.snd_pellet = {
+                0: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet1.wav")),
+                1: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet2.wav"))
+            }
+            self.snd_eat_gh = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatgh2.wav"))
+            self.snd_eat_fruit = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatfruit.wav"))
+            self.snd_power_pellet = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "powerpellet.wav"))
 
     def init_position(self, home_x: int, home_y: int):
         self.x = home_x * TILE_SIZE
@@ -99,7 +101,7 @@ class Pacman(object):
         screen.blit(self.current_anim[self.anim_frame],
                     (self.x, self.y))
 
-        if game_mode == GameMode.normal:
+        if game_mode in [GameMode.normal, GameMode.change_ghosts, GameMode.wait_after_eating_ghost]:
             if not self.vel_x == 0 or not self.vel_y == 0:
                 self.anim_frame += 1
 
@@ -168,7 +170,8 @@ class Pacman(object):
                     if maze.map_matrix[row][col] == 14:
                         # got a pellet
                         maze.remove_biscuit(row, col)
-                        self.snd_pellet[self.pellet_snd_num].play()
+                        if self.sounds_active:
+                            self.snd_pellet[self.pellet_snd_num].play()
                         self.pellet_snd_num = 1 - self.pellet_snd_num
                         game.add_score(10)
 
@@ -178,7 +181,8 @@ class Pacman(object):
                         # got a power pellet
                         game.set_game_mode(9)
                         maze.remove_biscuit(row, col)
-                        self.snd_power_pellet.play()
+                        if self.sounds_active:
+                            self.snd_power_pellet.play()
                         game.add_score(100)
                         # fixme: make the ghosts vulnerable
                     elif maze.map_matrix[row][col] == 11:

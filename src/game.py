@@ -115,9 +115,15 @@ class Game(object):
                         self.channel_background.stop()
 
     def draw(self):
-        self.maze.draw(self.screen)
+        th1 = threading.Thread(target=self.maze.draw, args=(self.screen,))
+        th2 = threading.Thread(target=self.draw_texts)
+
+        th1.start()
         self.player.draw(self.screen, self.game_mode)
-        self.draw_texts()
+        th2.start()
+
+        th1.join()
+        th2.join()
 
     def draw_texts(self):
         self.draw_score(0, self.maze.shape[0] * TILE_SIZE)

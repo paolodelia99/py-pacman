@@ -1,15 +1,20 @@
 # PyPacman
 
-The classic game of pacman built with pygame.
+The classic game of Pacman built with Pygame.
 
-# Todos
+# Quick Start
 
-- Refactor everything in you own way
-- Make the screen bigger
-- No username or scores
-- Menu
-- Remove Levels??
+Install the requirements
+    
+    pip install -r requirements.txt
+    
+Run the Game with the classic maze
 
+    python main.py -lay classic
+
+Run the game with others layout
+
+    python main.py -lay <layout>
 
 # References
 

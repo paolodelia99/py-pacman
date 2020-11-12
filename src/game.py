@@ -1,6 +1,7 @@
 import os
 import sys
 import threading
+from typing import Union, Tuple
 
 import pygame as pg
 from pygame.mixer import SoundType
@@ -21,6 +22,7 @@ class Game(object):
     snd_intro: SoundType
     snd_default: SoundType
     snd_death: SoundType
+    snd_extrapac: SoundType
     screen_bg: object
     num_digits: dict
     img_game_over: SurfaceType
@@ -34,6 +36,7 @@ class Game(object):
             "width": pg.display.Info().current_w
         }
         self.score = 0
+        self.mode_timer = 0
         self.sounds_active = sounds_active
         self.maze = maze
         self.maze.build_tile_map()
@@ -63,6 +66,7 @@ class Game(object):
             self.snd_intro = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "levelintro.wav"))
             self.snd_default = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "default.wav"))
             self.snd_death = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "death.wav"))
+            self.snd_extrapac = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "extrapac.wav"))
 
     def init_mixer(self):
         pg.mixer.init()
@@ -85,7 +89,7 @@ class Game(object):
         self.screen.blit(self.screen_bg, (0, 0))
 
     def start_game(self):
-        self.set_game_mode(1)
+        self.set_game_mode(0)
         self.init_game()
         self.init_players_in_map()
         self.game_loop()
@@ -95,6 +99,8 @@ class Game(object):
             self.init_screen()
             self.event_loop()
             self.draw()
+
+            self.check_mode()
 
             if self.game_mode in [GameMode.normal, GameMode.change_ghosts, GameMode.wait_after_eating_ghost]:
                 self.player.move(self.maze, self)
@@ -139,12 +145,13 @@ class Game(object):
         elif self.game_mode in [GameMode.ready, GameMode.wait_to_start]:
             self.screen.blit(self.img_ready, self.set_text_center(self.img_ready))
 
-    def set_text_center(self, img: SurfaceType) -> tuple:
+    def set_text_center(self, img: SurfaceType) -> Tuple[int, int]:
         return self.screen_size["width"] // 2 - (img.get_width() // 2), \
-                self.screen_size["height"] // 2 - (img.get_height() // 2)
+               self.screen_size["height"] // 2 - (img.get_height() // 2)
 
-    def set_game_mode(self, mode: int):
-        self.game_mode = GameMode(mode)
+    def set_game_mode(self, mode: Union[int, GameMode]):
+        self.game_mode = GameMode(mode) if type(mode) is int else mode
+        self.mode_timer = 0
         if self.sounds_active:
             self.set_proper_bkg_music()
 
@@ -152,8 +159,14 @@ class Game(object):
         self.score += score_to_add
 
     def set_proper_bkg_music(self):
-        if self.game_mode == GameMode.normal:
+        if self.game_mode == GameMode.ready:
+            self.play_bkg_sound(self.snd_intro)
+        elif self.game_mode == GameMode.normal:
             self.play_bkg_sound(self.snd_default)
+        elif self.game_mode == GameMode.hit_ghost:
+            self.play_bkg_sound(self.snd_death)
+        elif self.game_mode == GameMode.change_ghosts:
+            self.play_bkg_sound(self.snd_extrapac)
 
     def draw_score(self, x: int, y: int):
         str_score = str(self.score)
@@ -161,3 +174,27 @@ class Game(object):
         for i in range(0, len(str_score)):
             digit = int(str_score[i])
             self.screen.blit(self.num_digits[digit], (x + i * SCORE_COLWIDTH, y))
+
+    def check_mode(self):
+        if self.game_mode == GameMode.ready:
+            if self.mode_timer == 250:
+                self.set_game_mode(1)
+        elif self.game_mode == GameMode.normal:
+            for ghost in self.ghosts:
+                # fixme: make the ghost move ghost.move()
+                pass
+        elif self.game_mode == GameMode.hit_ghost:
+            pass
+        elif self.game_mode == GameMode.game_over:
+            pass
+        elif self.game_mode == GameMode.wait_to_start:
+            pass
+        elif self.game_mode == GameMode.wait_after_eating_ghost:
+            pass
+        elif self.game_mode == GameMode.wait_after_finishing_level:
+            pass
+        elif self.game_mode == GameMode.change_ghosts:
+            if self.mode_timer == 360:
+                self.set_game_mode(GameMode.normal)
+
+        self.mode_timer += 1

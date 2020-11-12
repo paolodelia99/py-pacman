@@ -1,6 +1,8 @@
 import os
 import sys
 from itertools import product
+from typing import Tuple
+
 
 import numpy as np
 
@@ -57,7 +59,7 @@ class Map:
                         TILE_LOOKUP_TABLE[self.map_matrix[x][y]]
                     ))
 
-    def get_player_home(self) -> tuple:
+    def get_player_home(self) -> Tuple[int, int]:
         home_y, home_x = np.where(self.map_matrix == 40)
         return int(home_x[0]), int(home_y[0])
 
@@ -128,5 +130,5 @@ class Map:
                     # pellet color
                     tile.set_at((x, y), self.pellet_color)
 
-    def get_map_sizes(self) -> tuple:
+    def get_map_sizes(self) -> Tuple[int, int]:
         return self.shape[1] * TILE_SIZE, (self.shape[0] + 1) * TILE_SIZE

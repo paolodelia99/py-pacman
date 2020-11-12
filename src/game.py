@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 
 import pygame as pg
 from pygame.mixer import SoundType
@@ -44,13 +45,10 @@ class Game(object):
         if self.sounds_active:
             self.init_mixer()
         self.load_assets()
-        self.fruitType = None
 
         self.player = Pacman(sounds_active=self.sounds_active)
         self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, 4)]
         self.path_finder = PathFinder()
-
-        self.set_game_mode(1)  # fixme : just a stub for now
 
     def load_assets(self):
         self.screen_bg = get_image_surface(os.path.join('res', 'backgrounds', '1.gif'))
@@ -87,13 +85,12 @@ class Game(object):
         self.screen.blit(self.screen_bg, (0, 0))
 
     def start_game(self):
-        self.load_assets()
+        self.set_game_mode(1)
+        self.init_game()
+        self.init_players_in_map()
         self.game_loop()
 
     def game_loop(self):
-        self.init_game()
-        self.init_players_in_map()
-
         while self.is_run:
             self.init_screen()
             self.event_loop()

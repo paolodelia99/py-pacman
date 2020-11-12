@@ -1,6 +1,9 @@
 import os
 import pygame as pg
 
+from src.game import Game
+from src.pacman import Pacman
+from src.utils.game_mode import GameMode
 from src.utils.ghost_state import GhostState
 
 
@@ -46,9 +49,9 @@ class Ghost(object):
 
         return anim
 
-    def draw(self, screen, game, player, level):
+    def draw(self, screen, game: Game, player: Pacman, level):
 
-        if game.mode == 3:
+        if game.game_mode == GameMode.game_over:
             return False
 
         # ghost eyes --
@@ -101,7 +104,7 @@ class Ghost(object):
             screen.blit(level.tile_id_image[level.tile_id['glasses']],
                         (self.x - game.screen_pixel_pos[0], self.y - game.screen_pixel_pos[1]))
 
-        if game.mode == 6 or game.mode == 7:
+        if game.game_mode == GameMode.wait_after_finishing_level or game.game_mode == GameMode.flash_maze:
             # don't animate ghost if the level is complete
             return False
 

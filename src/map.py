@@ -76,7 +76,7 @@ class Map:
 
         for i in range(self.map_matrix.shape[0]):
             for j in range(self.map_matrix.shape[1]):
-                if self.map_matrix[i][j] in [33, 40, 11, 12]:
+                if self.map_matrix[i][j] in [40, 11, 12]:
                     # position of pacman, the ghost or the doors
                     self.tile_map[i, j] = get_image_surface(os.path.join(sys.path[0], "res", "tiles", TILE_LOOKUP_TABLE[10]))
                 else:

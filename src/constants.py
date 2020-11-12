@@ -45,7 +45,11 @@ TILE_LOOKUP_TABLE = {
     29: 'wall-t-right.gif',
     30: 'wall-t-top.gif',
     31: 'wall-x.gif',
-    32: 'x-paintwall.gif'
+    32: 'x-paintwall.gif',
+    33: 'ghost-blinky.gif',
+    34: 'ghost-inky.gif',
+    35: 'ghost-pinky.gif',
+    36: 'ghost-sue.gif'
 }
 
 STATE_LOOKUP_TABLE = {
@@ -73,5 +77,8 @@ STATE_LOOKUP_TABLE = {
     31: 2,
     32: 2,
     33: -1,
+    34: -1,
+    35: -1,
+    36: -1,
     40: 0
 }

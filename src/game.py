@@ -22,7 +22,7 @@ class Game(object):
     snd_intro: SoundType
     snd_default: SoundType
     snd_death: SoundType
-    snd_extrapac: SoundType
+    snd_extra_pac: SoundType
     screen_bg: object
     num_digits: dict
     img_game_over: SurfaceType
@@ -66,7 +66,7 @@ class Game(object):
             self.snd_intro = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "levelintro.wav"))
             self.snd_default = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "default.wav"))
             self.snd_death = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "death.wav"))
-            self.snd_extrapac = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "extrapac.wav"))
+            self.snd_extra_pac = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "extrapac.wav"))
 
     def init_mixer(self):
         pg.mixer.init()
@@ -100,7 +100,7 @@ class Game(object):
             self.event_loop()
             self.draw()
 
-            self.check_mode()
+            self.check_game_mode()
 
             if self.game_mode in [GameMode.normal, GameMode.change_ghosts, GameMode.wait_after_eating_ghost]:
                 self.player.move(self.maze, self)
@@ -166,7 +166,7 @@ class Game(object):
         elif self.game_mode == GameMode.hit_ghost:
             self.play_bkg_sound(self.snd_death)
         elif self.game_mode == GameMode.change_ghosts:
-            self.play_bkg_sound(self.snd_extrapac)
+            self.play_bkg_sound(self.snd_extra_pac)
 
     def draw_score(self, x: int, y: int):
         str_score = str(self.score)
@@ -175,7 +175,7 @@ class Game(object):
             digit = int(str_score[i])
             self.screen.blit(self.num_digits[digit], (x + i * SCORE_COLWIDTH, y))
 
-    def check_mode(self):
+    def check_game_mode(self):
         if self.game_mode == GameMode.ready:
             if self.mode_timer == 250:
                 self.set_game_mode(1)

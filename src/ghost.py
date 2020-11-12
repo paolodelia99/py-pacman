@@ -1,13 +1,18 @@
 import os
-import pygame as pg
+import sys
 
-from src.game import Game
+import pygame as pg
+from pygame.surface import SurfaceType
+
 from src.pacman import Pacman
+from src.utils.functions import get_image_surface
 from src.utils.game_mode import GameMode
 from src.utils.ghost_state import GhostState
 
 
 class Ghost(object):
+
+    img_glasses: SurfaceType
 
     def __init__(self, ghost_id, ghost_color):
         self.x = 0
@@ -19,6 +24,7 @@ class Ghost(object):
         self.nearest_col = 0
         self.id = ghost_id
         self.state = GhostState.normal
+        self.value = 0
 
         self.home_x = 0
         self.home_y = 0
@@ -30,6 +36,7 @@ class Ghost(object):
 
         self.anim_fram = 1
         self.anim_delay = 0
+        self.load_assets()
 
     @staticmethod
     def load_ghost_animation(color):
@@ -49,7 +56,12 @@ class Ghost(object):
 
         return anim
 
-    def draw(self, screen, game: Game, player: Pacman, level):
+    def load_assets(self):
+        self.img_glasses = get_image_surface(os.path.join(sys.path[0], "res", "tiles", "glasses.gif"))
+
+    def draw(self, screen, game, player: Pacman):
+
+        pupil_set = None
 
         if game.game_mode == GameMode.game_over:
             return False
@@ -83,26 +95,26 @@ class Ghost(object):
         if self.state == GhostState.normal:
             # draw regular ghost (this one)
             screen.blit(self.anim[self.anim_fram],
-                        (self.x - game.screen_pixel_pos[0], self.y - game.screen_pixel_pos[1]))
+                        (self.x, self.y))
         elif self.state == GhostState.vulnerable:
-            if game.ghost_timer > 100:
+            if game.ghosts_timer > 100:
                 # blue
                 screen.blit(Ghost.load_ghost_animation((50, 50, 255, 255))[self.anim_fram],
-                            (self.x - game.screen_pixel_pos[0], self.y - game.screen_pixel_pos[1]))
+                            (self.x, self.y))
             else:
                 # blue/white flashing
-                temp_timer_i = int(game.ghost_timer / 10)
+                temp_timer_i = int(game.ghosts_timer / 10)
                 if temp_timer_i == 1 or temp_timer_i == 3 or temp_timer_i == 5 or temp_timer_i == 7 or temp_timer_i == 9:
                     screen.blit(Ghost.load_ghost_animation((255, 255, 255, 255))[self.anim_fram],
-                                (self.x - game.screen_pixel_pos[0], self.y - game.screen_pixel_pos[1]))
+                                (self.x, self.y))
                 else:
                     screen.blit(Ghost.load_ghost_animation((50, 50, 255, 255))[self.anim_fram],
-                                (self.x - game.screen_pixel_pos[0], self.y - game.screen_pixel_pos[1]))
+                                (self.x, self.y))
 
         elif self.state == GhostState.spectacles:
             # draw glasses
-            screen.blit(level.tile_id_image[level.tile_id['glasses']],
-                        (self.x - game.screen_pixel_pos[0], self.y - game.screen_pixel_pos[1]))
+            screen.blit(self.img_glasses,
+                        (self.x, self.y))
 
         if game.game_mode == GameMode.wait_after_finishing_level or game.game_mode == GameMode.flash_maze:
             # don't animate ghost if the level is complete
@@ -118,4 +130,11 @@ class Ghost(object):
                 self.anim_fram = 1
 
             self.anim_delay = 0
+
+    def set_ghost_normal(self):
+        if self.state == GhostState.vulnerable:
+            self.state = GhostState.normal
+
+    def duplicate_value(self):
+        self.value *= 2
 

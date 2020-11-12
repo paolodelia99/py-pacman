@@ -37,6 +37,7 @@ class Game(object):
         }
         self.score = 0
         self.mode_timer = 0
+        self.ghosts_timer = 0
         self.sounds_active = sounds_active
         self.maze = maze
         self.maze.build_tile_map()
@@ -102,6 +103,7 @@ class Game(object):
 
             self.check_game_mode()
 
+            # control pacman
             if self.game_mode in [GameMode.normal, GameMode.change_ghosts, GameMode.wait_after_eating_ghost]:
                 self.player.move(self.maze, self)
 
@@ -123,13 +125,18 @@ class Game(object):
     def draw(self):
         th1 = threading.Thread(target=self.maze.draw, args=(self.screen,))
         th2 = threading.Thread(target=self.draw_texts)
+        th3 = threading.Thread(target=self.player.draw, args=(self.screen, self.game_mode,))
 
         th1.start()
-        self.player.draw(self.screen, self.game_mode)
+        th3.start()
         th2.start()
+
+        for ghost in self.ghosts:
+            ghost.draw(self.screen, self, self.player)
 
         th1.join()
         th2.join()
+        th3.join()
 
     def draw_texts(self):
         self.draw_score(0, self.maze.shape[0] * TILE_SIZE)
@@ -196,5 +203,7 @@ class Game(object):
         elif self.game_mode == GameMode.change_ghosts:
             if self.mode_timer == 360:
                 self.set_game_mode(GameMode.normal)
+                for ghost in self.ghosts:
+                    ghost.set_ghost_normal()
 
         self.mode_timer += 1

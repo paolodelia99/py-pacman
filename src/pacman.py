@@ -181,6 +181,7 @@ class Pacman(object):
                         # got a power pellet
                         game.set_game_mode(9)
                         maze.remove_biscuit(row, col)
+                        game.ghosts_timer = 360
                         if self.sounds_active:
                             self.snd_power_pellet.play()
                         game.add_score(100)

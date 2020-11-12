@@ -1,7 +1,7 @@
 import os
 import sys
 from itertools import product
-from typing import Tuple
+from typing import Tuple, List
 
 
 import numpy as np
@@ -132,3 +132,14 @@ class Map:
 
     def get_map_sizes(self) -> Tuple[int, int]:
         return self.shape[1] * TILE_SIZE, (self.shape[0] + 1) * TILE_SIZE
+
+    def get_ghosts_home(self, num_ghosts: int) -> List:
+        # fixme: return a dict ??
+        ghosts_home = []
+
+        for i in range(0, num_ghosts):
+            home_y, home_x = np.where(self.map_matrix == 33 + i)
+            int(home_x[0]), int(home_y[0])
+            ghosts_home.append((home_x, home_y))
+
+        return ghosts_home

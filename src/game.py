@@ -6,7 +6,7 @@ from pygame.mixer import SoundType
 from pygame.surface import SurfaceType
 
 from src.pacman import Pacman
-from .constants import GHOST_COLORS
+from .constants import GHOST_COLORS, TILE_SIZE, SCORE_COLWIDTH
 from .ghost import Ghost
 from .map import Map
 from .utils.functions import get_image_surface
@@ -22,12 +22,16 @@ class Game(object):
     snd_death: SoundType
     screen_bg: object
     num_digits: dict
-    imGameOver: SurfaceType
-    imReady: SurfaceType
-    imLife: SurfaceType
+    img_game_over: SurfaceType
+    img_ready: SurfaceType
+    img_life: SurfaceType
 
     def __init__(self, maze: Map, screen, sounds_active: bool):
         self.screen = screen
+        self.screen_size = {
+            "height": pg.display.Info().current_h,
+            "width": pg.display.Info().current_w
+        }
         self.score = 0
         self.sounds_active = sounds_active
         self.maze = maze
@@ -54,9 +58,9 @@ class Game(object):
             i: get_image_surface(os.path.join(sys.path[0], "res", "text", str(i) + ".gif"))
             for i in range(0, 10)
         }
-        self.imGameOver = get_image_surface(os.path.join(sys.path[0], "res", "text", "gameover.gif"))
-        self.imReady = get_image_surface(os.path.join(sys.path[0], "res", "text", "ready.gif"))
-        self.imLife = get_image_surface(os.path.join(sys.path[0], "res", "text", "life.gif"))
+        self.img_game_over = get_image_surface(os.path.join(sys.path[0], "res", "text", "gameover.gif"))
+        self.img_ready = get_image_surface(os.path.join(sys.path[0], "res", "text", "ready.gif"))
+        self.img_life = get_image_surface(os.path.join(sys.path[0], "res", "text", "life.gif"))
         if self.sounds_active:
             self.snd_intro = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "levelintro.wav"))
             self.snd_default = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "default.wav"))
@@ -116,13 +120,25 @@ class Game(object):
     def draw(self):
         self.maze.draw(self.screen)
         self.player.draw(self.screen, self.game_mode)
-        # fixme: draw score and lives
+        self.draw_texts()
 
     def draw_texts(self):
-        # draw_score
-        # draw_ready
-        # draw_game_over
-        pass
+        self.draw_score(0, self.maze.shape[0] * TILE_SIZE)
+
+        for i in range(0, self.player.lives):
+            self.screen.blit(
+                self.img_life, (
+                    (self.maze.shape[1] // 2 - 1) * TILE_SIZE + i * 10,
+                    self.maze.shape[0] * TILE_SIZE))
+
+        if self.game_mode == 3:
+            self.screen.blit(self.img_game_over, self.set_text_center(self.img_game_over))
+        elif self.game_mode in [GameMode.ready, GameMode.wait_to_start]:
+            self.screen.blit(self.img_ready, self.set_text_center(self.img_ready))
+
+    def set_text_center(self, img: SurfaceType) -> tuple:
+        return self.screen_size["width"] // 2 - (img.get_width() // 2), \
+                self.screen_size["height"] // 2 - (img.get_height() // 2)
 
     def set_game_mode(self, mode: int):
         self.game_mode = GameMode(mode)
@@ -135,3 +151,10 @@ class Game(object):
     def set_proper_bkg_music(self):
         if self.game_mode == GameMode.normal:
             self.play_bkg_sound(self.snd_default)
+
+    def draw_score(self, x: int, y: int):
+        str_score = str(self.score)
+
+        for i in range(0, len(str_score)):
+            digit = int(str_score[i])
+            self.screen.blit(self.num_digits[digit], (x + i * SCORE_COLWIDTH, y))

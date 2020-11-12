@@ -37,7 +37,8 @@ class Game(object):
         self.is_game_run = False
         self.pause = False
 
-        self.init_mixer()
+        if self.sounds_active:
+            self.init_mixer()
         self.load_assets()
         self.fruitType = None
 
@@ -109,7 +110,8 @@ class Game(object):
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     self.is_run = False
-                    self.channel_background.stop()
+                    if self.sounds_active:
+                        self.channel_background.stop()
 
     def draw(self):
         self.maze.draw(self.screen)
@@ -124,7 +126,8 @@ class Game(object):
 
     def set_game_mode(self, mode: int):
         self.game_mode = GameMode(mode)
-        self.set_proper_bkg_music()
+        if self.sounds_active:
+            self.set_proper_bkg_music()
 
     def add_score(self, score_to_add: int):
         self.score += score_to_add

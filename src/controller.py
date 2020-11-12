@@ -9,8 +9,9 @@ from .map import Map
 
 class Controller(object):
 
-    def __init__(self, layout_name: str):
+    def __init__(self, layout_name: str, act_sound: bool):
         self.layout_name = layout_name
+        self.act_sound = act_sound
         self.maze = Map(layout_name)
         self.width, self.height = self.maze.get_map_sizes()
         self.screen = pg.display.set_mode((self.width, self.height))
@@ -23,7 +24,7 @@ class Controller(object):
         game = Game(
             maze=self.maze,
             screen=self.screen,
-            sounds_active=True
+            sounds_active=self.act_sound
         )
         game.start_game()
 

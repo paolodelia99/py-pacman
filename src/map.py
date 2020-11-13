@@ -97,15 +97,6 @@ class Map:
 
         return matrix
 
-    def get_neighbors(self, r: int, c: int, el: int) -> int:
-        def get(row, col):
-            return 0 <= row < self.map_matrix.shape[0] and 0 <= col < self.map_matrix.shape[1] and self.map_matrix[
-                row, col] == el
-
-        neighbors_list = [get(i, j) for i, j in product(range(r - 1, r + 2), range(c - 1, c + 2))]
-
-        return sum(map(bool, neighbors_list)) - 1
-
     def get_number_of_pellets(self) -> int:
         unique, counts = np.unique(self.map_matrix, return_counts=True)
         return dict(zip(unique, counts))[10]

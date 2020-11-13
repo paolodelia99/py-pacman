@@ -1,8 +1,8 @@
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 from src.utils.game_mode import GameMode
 
-GHOST_COLORS = {
+GHOST_COLORS: Dict[int, Tuple[int, int, int, int]] = {
     0: (255, 0, 0, 255),
     1: (255, 128, 255, 255),
     2: (128, 255, 255, 255),
@@ -28,9 +28,9 @@ SCREEN_WIDTH: int = SCREEN_TILE_SIZE_WIDTH * TILE_SIZE
 SCREEN_HEIGHT: int = SCREEN_TILE_SIZE_HEIGHT * TILE_SIZE
 
 MODES_TO_ZERO: List = [GameMode.ready, GameMode.hit_ghost, GameMode.wait_to_start,
-                 GameMode.wait_after_eating_ghost]
+                       GameMode.wait_after_eating_ghost]
 
-TILE_LOOKUP_TABLE = {
+TILE_LOOKUP_TABLE: Dict[int, str] = {
     10: 'blank.gif',
     11: 'door-h.gif',
     12: 'door-v.gif',
@@ -60,7 +60,7 @@ TILE_LOOKUP_TABLE = {
     36: 'ghost-sue.gif'
 }
 
-STATE_LOOKUP_TABLE = {
+STATE_LOOKUP_TABLE: Dict[int, int] = {
     10: 0,
     11: 0,
     12: 0,
@@ -88,5 +88,36 @@ STATE_LOOKUP_TABLE = {
     34: -1,
     35: -1,
     36: -1,
+    40: 0
+}
+
+PATH_FINDER_LOOKUP_TABLE: Dict[int, int] = {
+    10: 0,
+    11: 0,
+    12: 0,
+    13: 0,
+    14: 0,
+    15: 0,
+    16: 100,
+    17: 100,
+    18: 100,
+    19: 100,
+    20: 100,
+    21: 100,
+    22: 100,
+    23: 100,
+    24: 100,
+    25: 100,
+    26: 100,
+    27: 100,
+    28: 100,
+    29: 100,
+    30: 100,
+    31: 100,
+    32: 100,
+    33: 0,
+    34: 0,
+    35: 0,
+    36: 0,
     40: 0
 }

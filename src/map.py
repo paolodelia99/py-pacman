@@ -1,7 +1,7 @@
 import os
 import sys
 from itertools import product
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 import numpy as np
 
@@ -18,14 +18,14 @@ from .utils.functions import get_image_surface
 class Map:
 
     def __init__(self, layout_name):
-        self.map_matrix = np.loadtxt(os.path.join('res', 'layouts', layout_name + '.lay')).astype(int)
+        self.map_matrix = np.loadtxt(os.path.join(sys.path[0], 'res', 'layouts', layout_name + '.lay')).astype(int)
         self.shape = self.map_matrix.shape
         self.edge_light_color = (0, 0, 255, 255)
         self.edge_shadow_color = (0, 0, 255, 255)
         self.fill_color = (0, 0, 0, 255)
         self.pellet_color = (255, 255, 255, 255)
         self.layout_name = layout_name
-        self.state_matrix = self.build_state_matrix()
+        self.state_matrix = self.matrix_from_lookup_table(STATE_LOOKUP_TABLE)
 
     def is_wall(self, row: int, col: int) -> bool:
         if row > self.shape[0] or row < 0:
@@ -88,14 +88,14 @@ class Map:
                     ))
                 self.recolor_tile(self.tile_map[i, j])
 
-    def build_state_matrix(self) -> np.ndarray:
-        state_matrix = np.ndarray(shape=(self.map_matrix.shape[0], self.map_matrix.shape[1])).astype(np.int)
+    def matrix_from_lookup_table(self, lookup_table: Dict[int, int]) -> np.ndarray:
+        matrix = np.ndarray(shape=(self.map_matrix.shape[0], self.map_matrix.shape[1])).astype(np.int)
 
         for i in range(self.map_matrix.shape[0]):
             for j in range(self.map_matrix.shape[1]):
-                state_matrix[i][j] = STATE_LOOKUP_TABLE[self.map_matrix[i][j]]
+                matrix[i][j] = lookup_table[self.map_matrix[i][j]]
 
-        return state_matrix
+        return matrix
 
     def get_neighbors(self, r: int, c: int, el: int) -> int:
         def get(row, col):
@@ -146,5 +146,5 @@ class Map:
 
     def reinit_map(self):
         self.map_matrix = np.loadtxt(os.path.join('res', 'layouts', self.layout_name + '.lay')).astype(int)
-        self.state_matrix = self.build_state_matrix()
+        self.state_matrix = self.matrix_from_lookup_table(STATE_LOOKUP_TABLE)
         self.build_tile_map()

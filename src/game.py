@@ -8,7 +8,7 @@ from pygame.mixer import SoundType
 from pygame.surface import SurfaceType
 
 from src.pacman import Pacman
-from .constants import GHOST_COLORS, TILE_SIZE, SCORE_COLWIDTH, MODES_TO_ZERO
+from .constants import GHOST_COLORS, TILE_SIZE, SCORE_COLWIDTH, MODES_TO_ZERO, PATH_FINDER_LOOKUP_TABLE
 from .ghost import Ghost
 from .map import Map
 from .utils.functions import get_image_surface
@@ -55,7 +55,7 @@ class Game(object):
 
         self.player = Pacman(sounds_active=self.sounds_active)
         self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, 4)]
-        self.path_finder = PathFinder()
+        self.path_finder = PathFinder(self.maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE))
 
     def load_assets(self):
         self.screen_bg = get_image_surface(os.path.join('res', 'backgrounds', '1.gif'))

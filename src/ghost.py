@@ -97,13 +97,13 @@ class Ghost(object):
             screen.blit(self.anim[self.anim_fram],
                         (self.x, self.y))
         elif self.state == GhostState.vulnerable:
-            if game.are_ghosts_vulnerable() and game.mode_timer < 260:
+            if game.are_ghosts_vulnerable() and game.ghosts_timer < 260:
                 # blue
                 screen.blit(Ghost.load_ghost_animation(VULNERABLE_GHOST_COLOR)[self.anim_fram],
                             (self.x, self.y))
             else:
                 # blue/white flashing
-                temp_timer_i = int((360 - game.mode_timer) / 10)
+                temp_timer_i = int((360 - game.ghosts_timer) / 10)
                 if temp_timer_i == 1 or temp_timer_i == 3 or temp_timer_i == 5 or temp_timer_i == 7 or temp_timer_i == 9:
                     screen.blit(Ghost.load_ghost_animation(WHITE_GHOST_COLOR)[self.anim_fram],
                                 (self.x, self.y))

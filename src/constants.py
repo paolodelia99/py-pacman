@@ -1,4 +1,6 @@
-from typing import Tuple
+from typing import Tuple, List
+
+from src.utils.game_mode import GameMode
 
 GHOST_COLORS = {
     0: (255, 0, 0, 255),
@@ -24,6 +26,9 @@ SCORE_COLWIDTH: int = 13
 
 SCREEN_WIDTH: int = SCREEN_TILE_SIZE_WIDTH * TILE_SIZE
 SCREEN_HEIGHT: int = SCREEN_TILE_SIZE_HEIGHT * TILE_SIZE
+
+MODES_TO_ZERO: List = [GameMode.ready, GameMode.hit_ghost, GameMode.wait_to_start,
+                 GameMode.wait_after_eating_ghost]
 
 TILE_LOOKUP_TABLE = {
     10: 'blank.gif',

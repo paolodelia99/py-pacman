@@ -132,33 +132,33 @@ class Pacman(object):
         if pg.key.get_pressed()[pg.K_LEFT]:
             if not (self.vel_x == -self.speed and self.vel_y == 0) \
                     and not self.check_hit_wall(
-                self.x - self.speed,
-                self.y,
-                maze):
+                    self.x - self.speed,
+                    self.y,
+                    maze):
                 self.vel_x = -self.speed
                 self.vel_y = 0
         elif pg.key.get_pressed()[pg.K_RIGHT]:
             if not (self.vel_x == self.speed and self.vel_y == 0) \
                     and not self.check_hit_wall(
-                self.x + self.speed,
-                self.y,
-                maze):
+                    self.x + self.speed,
+                    self.y,
+                    maze):
                 self.vel_x = self.speed
                 self.vel_y = 0
         elif pg.key.get_pressed()[pg.K_UP]:
             if not (self.vel_y == -self.speed and self.vel_x == 0) \
                     and not self.check_hit_wall(
-                self.x,
-                self.y - self.speed,
-                maze):
+                    self.x,
+                    self.y - self.speed,
+                    maze):
                 self.vel_y = -self.speed
                 self.vel_x = 0
         elif pg.key.get_pressed()[pg.K_DOWN]:
             if not (self.vel_y == +self.speed and self.vel_x == 0) \
                     and not self.check_hit_wall(
-                self.x,
-                self.y + self.speed,
-                maze):
+                    self.x,
+                    self.y + self.speed,
+                    maze):
                 self.vel_y = self.speed
                 self.vel_x = 0
 
@@ -216,6 +216,7 @@ class Pacman(object):
                     game.set_mode(GameMode.hit_ghost)
                 elif ghost.state == GhostState.vulnerable:
                     game.add_score(ghost.value)
+                    game.draw_ghost_value(ghost.value)
                     game.duplicate_vulnerable_ghosts_value()
                     if self.sounds_active:
                         self.snd_eat_gh.play()

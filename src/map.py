@@ -143,3 +143,8 @@ class Map:
             ghosts_home.append({"x": home_x, "y": home_y})
 
         return ghosts_home
+
+    def reinit_map(self):
+        self.map_matrix = np.loadtxt(os.path.join('res', 'layouts', self.layout_name + '.lay')).astype(int)
+        self.state_matrix = self.build_state_matrix()
+        self.build_tile_map()

@@ -3,7 +3,6 @@ import sys
 from itertools import product
 from typing import Tuple, List
 
-
 import numpy as np
 
 from .constants import STATE_LOOKUP_TABLE, \
@@ -53,11 +52,11 @@ class Map:
         self.map_matrix[x][y] = 10
         self.state_matrix[x][y] = 0
         self.tile_map[x, y] = get_image_surface(os.path.join(
-                        sys.path[0],
-                        "res",
-                        "tiles",
-                        TILE_LOOKUP_TABLE[self.map_matrix[x][y]]
-                    ))
+            sys.path[0],
+            "res",
+            "tiles",
+            TILE_LOOKUP_TABLE[self.map_matrix[x][y]]
+        ))
 
     def get_player_home(self) -> Tuple[int, int]:
         home_y, home_x = np.where(self.map_matrix == 40)
@@ -76,9 +75,10 @@ class Map:
 
         for i in range(self.map_matrix.shape[0]):
             for j in range(self.map_matrix.shape[1]):
-                if self.map_matrix[i][j] in [40, 11, 12]:
+                if self.map_matrix[i][j] in [40, 11, 12, 33, 34, 35, 36]:
                     # position of pacman, the ghost or the doors
-                    self.tile_map[i, j] = get_image_surface(os.path.join(sys.path[0], "res", "tiles", TILE_LOOKUP_TABLE[10]))
+                    self.tile_map[i, j] = get_image_surface(
+                        os.path.join(sys.path[0], "res", "tiles", TILE_LOOKUP_TABLE[10]))
                 else:
                     self.tile_map[i, j] = get_image_surface(os.path.join(
                         sys.path[0],
@@ -139,7 +139,7 @@ class Map:
 
         for i in range(0, num_ghosts):
             home_y, home_x = np.where(self.map_matrix == 33 + i)
-            int(home_x[0]), int(home_y[0])
-            ghosts_home.append((home_x, home_y))
+            home_y, home_x = int(home_y[0]), int(home_x[0])
+            ghosts_home.append({"x": home_x, "y": home_y})
 
         return ghosts_home

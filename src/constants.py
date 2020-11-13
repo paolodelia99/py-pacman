@@ -1,16 +1,19 @@
+from typing import Tuple
+
 GHOST_COLORS = {
     0: (255, 0, 0, 255),
     1: (255, 128, 255, 255),
     2: (128, 255, 255, 255),
-    3: (255, 128, 0, 255),
-    4: (50, 50, 255, 255),
-    5: (255, 255, 255, 255)
+    3: (255, 128, 0, 255)
 }
 
-IMG_EDGE_LIGHT_COLOR = (255, 206, 255, 255)
-IMG_FILL_COLOR = (132, 0, 132, 255)
-IMG_EDGE_SHADOW_COLOR = (255, 0, 255, 255)
-IMG_PELLET_COLOR = (128, 0, 128, 255)
+VULNERABLE_GHOST_COLOR: Tuple[int, int, int, int] = (50, 50, 255, 255)
+WHITE_GHOST_COLOR: Tuple[int, int, int, int] = (255, 255, 255, 255)
+
+IMG_EDGE_LIGHT_COLOR: Tuple[int, int, int, int] = (255, 206, 255, 255)
+IMG_FILL_COLOR: Tuple[int, int, int, int] = (132, 0, 132, 255)
+IMG_EDGE_SHADOW_COLOR: Tuple[int, int, int, int] = (255, 0, 255, 255)
+IMG_PELLET_COLOR: Tuple[int, int, int, int] = (128, 0, 128, 255)
 
 SCREEN_TILE_SIZE_HEIGHT: int = 23
 SCREEN_TILE_SIZE_WIDTH: int = 19

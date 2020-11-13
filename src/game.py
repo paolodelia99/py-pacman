@@ -13,6 +13,7 @@ from .ghost import Ghost
 from .map import Map
 from .utils.functions import get_image_surface
 from .utils.game_mode import GameMode
+from .utils.ghost_state import GhostState
 from .utils.path_finder import PathFinder
 
 
@@ -37,7 +38,6 @@ class Game(object):
         }
         self.score = 0
         self.mode_timer = 0
-        self.ghosts_timer = 0
         self.sounds_active = sounds_active
         self.maze = maze
         self.maze.build_tile_map()
@@ -84,13 +84,16 @@ class Game(object):
 
     def init_players_in_map(self):
         home_x, home_y = self.maze.get_player_home()
-        self.player.init_position(home_x, home_y)
+        self.player.init_home(home_x, home_y)
+        ghosts_home = self.maze.get_ghosts_home(len(self.ghosts))
+        for i, ghost in enumerate(self.ghosts):
+            ghost.init_home(ghosts_home[i]["x"], ghosts_home[i]["y"])
 
     def init_screen(self):
         self.screen.blit(self.screen_bg, (0, 0))
 
     def start_game(self):
-        self.set_game_mode(0)
+        self.set_mode(0)
         self.init_game()
         self.init_players_in_map()
         self.game_loop()
@@ -156,9 +159,10 @@ class Game(object):
         return self.screen_size["width"] // 2 - (img.get_width() // 2), \
                self.screen_size["height"] // 2 - (img.get_height() // 2)
 
-    def set_game_mode(self, mode: Union[int, GameMode]):
+    def set_mode(self, mode: Union[int, GameMode]):
         self.game_mode = GameMode(mode) if type(mode) is int else mode
-        self.mode_timer = 0
+        if self.game_mode in [GameMode.ready, GameMode.hit_ghost, GameMode.change_ghosts]:
+            self.mode_timer = 0
         if self.sounds_active:
             self.set_proper_bkg_music()
 
@@ -185,13 +189,19 @@ class Game(object):
     def check_game_mode(self):
         if self.game_mode == GameMode.ready:
             if self.mode_timer == 250:
-                self.set_game_mode(1)
+                self.set_mode(1)
         elif self.game_mode == GameMode.normal:
             for ghost in self.ghosts:
                 # fixme: make the ghost move ghost.move()
                 pass
         elif self.game_mode == GameMode.hit_ghost:
-            pass
+            if self.mode_timer == 60:
+                self.restart()
+                self.player.lives -= 1
+                if self.player.lives == -1:
+                    self.set_mode(GameMode.game_over)
+                else:
+                    self.set_mode(GameMode.wait_to_start)
         elif self.game_mode == GameMode.game_over:
             pass
         elif self.game_mode == GameMode.wait_to_start:
@@ -202,8 +212,25 @@ class Game(object):
             pass
         elif self.game_mode == GameMode.change_ghosts:
             if self.mode_timer == 360:
-                self.set_game_mode(GameMode.normal)
+                self.set_mode(GameMode.normal)
                 for ghost in self.ghosts:
-                    ghost.set_ghost_normal()
+                    ghost.set_normal()
 
         self.mode_timer += 1
+
+    def are_ghosts_vulnerable(self) -> bool:
+        return self.game_mode == GameMode.change_ghosts and self.mode_timer < 360
+
+    def make_ghosts_vulnerable(self):
+        for ghost in self.ghosts:
+            ghost.set_vulnerable()
+
+    def duplicate_vulnerable_ghosts_value(self):
+        for ghost in self.ghosts:
+            if ghost.state == GhostState.vulnerable:
+                ghost.duplicate_value()
+
+    def restart(self):
+        self.init_players_in_map()
+        self.player.set_start_anim()
+        self.player.set_vel_to_zero()

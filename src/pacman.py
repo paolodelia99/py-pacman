@@ -1,14 +1,15 @@
+import os
+import sys
 from typing import Dict
 
 import pygame as pg
-import os
-import sys
-
 from pygame.mixer import SoundType
 
 from src.constants import TILE_SIZE
 from src.map import Map
+from src.utils.functions import check_if_hit
 from src.utils.game_mode import GameMode
+from src.utils.ghost_state import GhostState
 
 
 class Pacman(object):
@@ -66,7 +67,7 @@ class Pacman(object):
             self.snd_eat_fruit = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatfruit.wav"))
             self.snd_power_pellet = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "powerpellet.wav"))
 
-    def init_position(self, home_x: int, home_y: int):
+    def init_home(self, home_x: int, home_y: int):
         self.x = home_x * TILE_SIZE
         self.y = home_y * TILE_SIZE
 
@@ -80,6 +81,8 @@ class Pacman(object):
             self.y += self.vel_y
 
             self.check_if_hit_something(maze, game)
+            self.check_collision_with_ghosts(game)
+            # todo: check collision with fruit
         else:
             self.vel_y, self.vel_x = 0, 0
 
@@ -129,33 +132,33 @@ class Pacman(object):
         if pg.key.get_pressed()[pg.K_LEFT]:
             if not (self.vel_x == -self.speed and self.vel_y == 0) \
                     and not self.check_hit_wall(
-                    self.x - self.speed,
-                    self.y,
-                    maze):
+                self.x - self.speed,
+                self.y,
+                maze):
                 self.vel_x = -self.speed
                 self.vel_y = 0
         elif pg.key.get_pressed()[pg.K_RIGHT]:
             if not (self.vel_x == self.speed and self.vel_y == 0) \
                     and not self.check_hit_wall(
-                    self.x + self.speed,
-                    self.y,
-                    maze):
+                self.x + self.speed,
+                self.y,
+                maze):
                 self.vel_x = self.speed
                 self.vel_y = 0
         elif pg.key.get_pressed()[pg.K_UP]:
             if not (self.vel_y == -self.speed and self.vel_x == 0) \
                     and not self.check_hit_wall(
-                    self.x,
-                    self.y - self.speed,
-                    maze):
+                self.x,
+                self.y - self.speed,
+                maze):
                 self.vel_y = -self.speed
                 self.vel_x = 0
         elif pg.key.get_pressed()[pg.K_DOWN]:
             if not (self.vel_y == +self.speed and self.vel_x == 0) \
                     and not self.check_hit_wall(
-                    self.x,
-                    self.y + self.speed,
-                    maze):
+                self.x,
+                self.y + self.speed,
+                maze):
                 self.vel_y = self.speed
                 self.vel_x = 0
 
@@ -176,16 +179,15 @@ class Pacman(object):
                         game.add_score(10)
 
                         if maze.get_number_of_pellets() == 0:
-                            game.set_game_mode(6)
+                            game.set_mode(6)
                     elif maze.map_matrix[row][col] == 15:
                         # got a power pellet
-                        game.set_game_mode(9)
+                        game.set_mode(9)
                         maze.remove_biscuit(row, col)
-                        game.ghosts_timer = 360
                         if self.sounds_active:
                             self.snd_power_pellet.play()
                         game.add_score(100)
-                        # fixme: make the ghosts vulnerable
+                        game.make_ghosts_vulnerable()
                     elif maze.map_matrix[row][col] == 11:
                         # ran into a horizontal door
                         for i in range(maze.shape[1]):
@@ -206,3 +208,25 @@ class Pacman(object):
                                         self.y += TILE_SIZE
                                     else:
                                         self.y -= TILE_SIZE
+
+    def check_collision_with_ghosts(self, game):
+        for ghost in game.ghosts:
+            if check_if_hit(self.x, self.y, ghost.x, ghost.y, TILE_SIZE // 2):
+                if ghost.state == GhostState.normal:
+                    game.set_mode(GameMode.hit_ghost)
+                elif ghost.state == GhostState.vulnerable:
+                    game.add_score(ghost.value)
+                    game.duplicate_vulnerable_ghosts_value()
+                    if self.sounds_active:
+                        self.snd_eat_gh.play()
+
+                    ghost.set_spectacles()
+                    game.set_mode(GameMode.wait_after_eating_ghost)
+
+    def set_start_anim(self):
+        self.current_anim = self.anim_s
+        self.anim_frame = 3
+
+    def set_vel_to_zero(self):
+        self.vel_x = 0
+        self.vel_y = 0

@@ -50,3 +50,6 @@ class MatrixPoint(Point):
     def set_parent(self, point2):
         if self.get_distance(point2) == 1 and self.is_cross_neighbor(point2):
             self.parent = point2
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y and self.value == other.value

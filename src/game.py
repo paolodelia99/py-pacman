@@ -89,8 +89,11 @@ class Game(object):
         home_x, home_y = self.maze.get_player_home()
         self.player.init_home(home_x, home_y)
         ghosts_home = self.maze.get_ghosts_home(len(self.ghosts))
+        resp_x, resp_y = self.maze.get_ghost_respawn_home()
         for i, ghost in enumerate(self.ghosts):
             ghost.init_home(ghosts_home[i]["x"], ghosts_home[i]["y"])
+            ghost.init_for_game(path_finder=self.path_finder, player=self.player)
+            ghost.init_respawn_home(resp_x, resp_y)
 
     def init_screen(self):
         self.screen.blit(self.screen_bg, (0, 0))
@@ -114,7 +117,7 @@ class Game(object):
 
             # control pacman
             if self.game_mode in [GameMode.normal, GameMode.change_ghosts, GameMode.wait_after_eating_ghost]:
-                self.player.move(self.maze, self)
+                self.move_players()
 
             pg.display.flip()
             self.clock.tick(60)
@@ -131,6 +134,11 @@ class Game(object):
                     self.start_game(restart=True)
                     if self.sounds_active:
                         self.channel_background.stop()
+
+    def move_players(self):
+        self.player.move(self.maze, self)
+        for ghost in self.ghosts:
+            ghost.move(path_finder=self.path_finder, player=self.player)
 
     def draw(self):
         th1 = threading.Thread(target=self.maze.draw, args=(self.screen,))

@@ -5,6 +5,13 @@ from src.utils.path_finder import PathFinder
 maze = Map('test')
 
 
+def test_get_random_allow_position():
+    path_matrix = maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE)
+    path_finder = PathFinder(path_matrix)
+    x, y = path_finder.get_random_allow_position()
+    assert path_matrix[y][x] == 0
+
+
 def test_path_matrix_101():
     path_matrix = maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE)
     assert path_matrix.shape == (22, 19)

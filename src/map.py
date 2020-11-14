@@ -138,3 +138,7 @@ class Map:
         self.map_matrix = np.loadtxt(os.path.join('res', 'layouts', self.layout_name + '.lay')).astype(int)
         self.state_matrix = self.matrix_from_lookup_table(STATE_LOOKUP_TABLE)
         self.build_tile_map()
+
+    def get_ghost_respawn_home(self) -> Tuple[int, int]:
+        home_y, home_x = np.where(self.map_matrix == 35)
+        return int(home_x[0]), int(home_y[0])

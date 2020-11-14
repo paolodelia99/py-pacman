@@ -30,9 +30,6 @@ class Pacman(object):
         self.nearest_row = 0
         self.nearest_col = 0
 
-        self.homeX = 0
-        self.homeY = 0
-
         self.anim_frame = 1
         self.anim_l = {}
         self.anim_r = {}
@@ -70,6 +67,8 @@ class Pacman(object):
     def init_home(self, home_x: int, home_y: int):
         self.x = home_x * TILE_SIZE
         self.y = home_y * TILE_SIZE
+        self.nearest_row = home_y
+        self.nearest_row = home_x
 
     def move(self, maze: Map, game):
         self.nearest_row = int(((self.y + TILE_SIZE / 2) / TILE_SIZE))

@@ -9,6 +9,7 @@ from src.pacman import Pacman
 from src.utils.functions import get_image_surface
 from src.utils.game_mode import GameMode
 from src.utils.ghost_state import GhostState
+from src.utils.path_finder import PathFinder
 
 
 class Ghost(object):
@@ -28,8 +29,10 @@ class Ghost(object):
 
         self.home_x = 0
         self.home_y = 0
+        self.respawn_x = None
+        self.respawn_y = None
 
-        self.current_path = ""
+        self.current_path = None
         self.ghost_color = ghost_color
 
         self.anim = Ghost.load_ghost_animation(self.ghost_color)
@@ -131,6 +134,29 @@ class Ghost(object):
 
             self.anim_delay = 0
 
+    def move(self, path_finder: PathFinder, player: Pacman):
+        self.x += self.vel_x
+        self.y += self.vel_y
+
+        self.nearest_row = int(((self.y + TILE_SIZE / 2) / TILE_SIZE))
+        self.nearest_col = int(((self.x + TILE_SIZE / 2) / TILE_SIZE))
+
+        if (self.x % TILE_SIZE) == 0 and self.y % TILE_SIZE == 0:
+            # ghost is lined up with the grid
+            if self.current_path is not None and len(self.current_path) > 0:
+                self.current_path = self.current_path[1:]
+                self.follow_next_path(path_finder=path_finder, player=player)
+            else:
+                self.x = self.nearest_col * TILE_SIZE
+                self.y = self.nearest_row * TILE_SIZE
+                self.current_path = path_finder.get_min_path(
+                    self.nearest_col,
+                    self.nearest_row,
+                    player.nearest_col,
+                    player.nearest_row
+                )
+                self.follow_next_path(path_finder=path_finder, player=player)
+
     def set_normal(self):
         if self.state == GhostState.vulnerable:
             self.state = GhostState.normal
@@ -144,6 +170,8 @@ class Ghost(object):
         self.home_y = home_y * TILE_SIZE
         self.x = self.home_x
         self.y = self.home_y
+        self.nearest_col = home_x
+        self.nearest_row = home_y
 
     def set_vulnerable(self):
         self.state = GhostState.vulnerable
@@ -156,3 +184,55 @@ class Ghost(object):
         self.x = self.nearest_col * TILE_SIZE
         self.y = self.nearest_row * TILE_SIZE
         # fixme: find path to home
+
+    def follow_next_path(self, path_finder: PathFinder, player: Pacman, random=False):
+        if self.current_path is not None:
+            if len(self.current_path) > 0:
+                if self.current_path[0] == "L":
+                    self.vel_x, self.vel_y = -self.speed, 0
+                elif self.current_path[0] == "R":
+                    self.vel_x, self.vel_y = self.speed, 0
+                elif self.current_path[0] == "U":
+                    self.vel_x, self.vel_y = 0, -self.speed
+                elif self.current_path[0] == "D":
+                    self.vel_x, self.vel_y = 0, self.speed
+        else:
+            if random:
+                rnd_col, rnd_row = path_finder.get_random_allow_position()
+                self.current_path = path_finder.get_min_path(
+                    self.nearest_col,
+                    self.nearest_row,
+                    rnd_col,
+                    rnd_row
+                )
+                self.follow_next_path(path_finder, player)
+            elif not self.state == GhostState.spectacles:
+                self.current_path = path_finder.get_min_path(
+                    self.nearest_col,
+                    self.nearest_col,
+                    player.nearest_col,
+                    player.nearest_row
+                )
+                self.follow_next_path(path_finder=path_finder, player=player)
+            else:
+                self.state = 1
+                self.speed = self.speed / 4
+                rnd_col, rnd_row = path_finder.get_random_allow_position()
+                self.current_path = path_finder.get_min_path(
+                    self.nearest_col,
+                    self.nearest_row,
+                    rnd_col,
+                    rnd_row
+                )
+                self.follow_next_path(path_finder, player)
+
+    def init_respawn_home(self, resp_x: int, resp_y: int):
+        self.respawn_x = resp_x * TILE_SIZE
+        self.respawn_y = resp_y * TILE_SIZE
+
+    def init_for_game(self, path_finder: PathFinder, player: Pacman):
+        self.vel_x = 0
+        self.vel_y = 0
+        self.state = GhostState.normal
+        self.speed = 2
+        self.follow_next_path(path_finder, player, True)

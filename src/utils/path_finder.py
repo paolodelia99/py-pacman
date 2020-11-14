@@ -1,4 +1,4 @@
-from typing import Set, List, Optional
+from typing import Set, List, Optional, Tuple
 
 import numpy as np
 
@@ -72,7 +72,7 @@ class PathFinder(object):
         raise NoPathFoundException(start, goal)
 
     def check_point_validity(self, x: int, y: int):
-        if not (0 < x < self.map_shape[1] and 0 < y < self.map_shape[1]):
+        if not (0 <= x < self.map_shape[1] and 0 <= y < self.map_shape[0]):
             raise NotValidPointException(x, y)
 
     @staticmethod
@@ -83,3 +83,8 @@ class PathFinder(object):
             m_point = m_point.parent
         path.reverse()
         return path
+
+    def get_random_allow_position(self) -> Tuple[int, int]:
+        res = np.where(self.state_map == 0)
+        rnd = np.random.randint(0, high=len(res[0]))
+        return res[1][rnd], res[0][rnd]

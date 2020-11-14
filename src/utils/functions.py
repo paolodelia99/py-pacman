@@ -56,9 +56,18 @@ def get_neighbors(matrix: np.ndarray, row: int, col: int) -> Dict[str, Union[Mat
             neighbors['L'] = MatrixPoint(matrix[row][col - 1], col - 1, row)
             neighbors['R'] = MatrixPoint(matrix[row][col + 1], col + 1, row)
     else:
-        neighbors['D'] = MatrixPoint(matrix[row + 1][col], col, row + 1)
-        neighbors['U'] = MatrixPoint(matrix[row - 1][col], col, row - 1)
-        neighbors['L'] = MatrixPoint(matrix[row][col - 1], col - 1, row)
-        neighbors['R'] = MatrixPoint(matrix[row][col + 1], col + 1, row)
+        if col == 0:
+            neighbors['D'] = MatrixPoint(matrix[row + 1][col], col, row + 1)
+            neighbors['U'] = MatrixPoint(matrix[row - 1][col], col, row - 1)
+            neighbors['R'] = MatrixPoint(matrix[row][col + 1], col + 1, row)
+        elif col == matrix.shape[1] - 1:
+            neighbors['D'] = MatrixPoint(matrix[row + 1][col], col, row + 1)
+            neighbors['U'] = MatrixPoint(matrix[row - 1][col], col, row - 1)
+            neighbors['L'] = MatrixPoint(matrix[row][col - 1], col - 1, row)
+        else:
+            neighbors['D'] = MatrixPoint(matrix[row + 1][col], col, row + 1)
+            neighbors['U'] = MatrixPoint(matrix[row - 1][col], col, row - 1)
+            neighbors['L'] = MatrixPoint(matrix[row][col - 1], col - 1, row)
+            neighbors['R'] = MatrixPoint(matrix[row][col + 1], col + 1, row)
 
     return neighbors

@@ -4,6 +4,7 @@ import numpy as np
 
 from .matrix_point import MatrixPoint
 from ..constants import INVERT_ORIENTATION_TABLE
+from .functions import get_neighbors
 
 
 class NotValidPointException(Exception):
@@ -53,21 +54,21 @@ class PathFinder(object):
             open_set.remove(current)
             closed_set.add(current)
 
-            for k, point in current.get_cross_neighbors().items():
-                m_point = MatrixPoint(self.state_map[point.y][point.x], point.x, point.y)
+            for k, point in get_neighbors(self.state_map, current.y, current.x).items():
+                if point is not None:
 
-                if m_point in closed_set:
-                    continue
+                    if point in closed_set:
+                        continue
 
-                if m_point in open_set:
-                    new_g = current.g + 1
-                    if m_point.g > new_g:
-                        m_point.g = new_g
-                        m_point.set_parent(current)
-                else:
-                    m_point.g = current.g + 1
-                    m_point.set_parent(current)
-                    open_set.add(m_point)
+                    if point in open_set:
+                        new_g = current.g + 1
+                        if point.g > new_g:
+                            point.g = new_g
+                            point.set_parent(current)
+                    else:
+                        point.g = current.g + 1
+                        point.set_parent(current)
+                        open_set.add(point)
 
         raise NoPathFoundException(start, goal)
 

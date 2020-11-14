@@ -1,7 +1,6 @@
-from typing import Tuple, Dict, Union, Any
+from typing import Tuple
 
 import numpy as np
-from .functions import get_neighbors, manhattan_distance
 
 
 class NotValidPointException(Exception):

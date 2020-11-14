@@ -81,4 +81,5 @@ class PathFinder(object):
         while m_point.parent:
             path.append(INVERT_ORIENTATION_TABLE[m_point.get_parent_orientation()])
             m_point = m_point.parent
+        path.reverse()
         return path

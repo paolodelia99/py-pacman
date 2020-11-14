@@ -12,8 +12,22 @@ def test_path_matrix_101():
     assert path_matrix.min() == 0
 
 
-def test_a_star():
+def test_a_star_101():
     path_matrix = maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE)
     path_finder = PathFinder(path_matrix)
     path = path_finder.get_min_path(12, 12, 9, 10)
-    assert path == ['D', 'D', 'L', 'L', 'L', 'U', 'U', 'U', 'U']
+    assert path == ['U', 'U', 'U', 'U', 'L', 'L', 'L', 'D', 'D']
+
+
+def test_a_star_201():
+    path_matrix = maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE)
+    path_finder = PathFinder(path_matrix)
+    path = path_finder.get_min_path(1, 1, 6, 6)
+    assert path == ['R', 'R', 'R', 'D', 'D', 'D', 'R', 'R', 'D', 'D']
+
+
+def test_a_star_301():
+    path_matrix = maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE)
+    path_finder = PathFinder(path_matrix)
+    path = path_finder.get_min_path(9, 8, 1, 18)
+    assert path == ['L', 'L', 'L', 'D', 'D', 'D', 'D', 'D', 'D', 'L', 'L', 'D', 'D', 'D', 'D', 'L', 'L', 'L']

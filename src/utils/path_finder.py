@@ -1,4 +1,7 @@
+from typing import Tuple, Dict, Union, Any
+
 import numpy as np
+from .functions import get_neighbors, manhattan_distance
 
 
 class NotValidPointException(Exception):
@@ -22,9 +25,14 @@ class PathFinder(object):
         self.check_point_validity(x2, y2)
         # fixme: a* algo to implement
 
-    @staticmethod
-    def manhattan_distance(x1: int, y1: int, x2: int, y2: int) -> int:
-        return abs(x1 - x2) + abs(y1 - y2)
+        open_set = set()
+        closed_set = set()
+        current: Tuple[int, int] = (x1, y1)
+
+        open_set.add(current)
+
+        while open_set:
+            current = []
 
     def check_point_validity(self, x: int, y: int):
         if not (0 < x < self.map_shape[1] and 0 < y < self.map_shape[1]):

@@ -1,9 +1,15 @@
 from src.constants import PATH_FINDER_LOOKUP_TABLE
 from src.map import Map
-from src.utils.functions import get_neighbors
+from src.utils.functions import get_neighbors, manhattan_distance
 
 maze = Map('test')
 matrix = maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE)
+
+
+def test_manhattan_distance():
+    assert manhattan_distance(9, 10, 2, -5) == 22
+    assert manhattan_distance(1, 1, 9, 9) == 16
+    assert manhattan_distance(0, 0, 100, -100) == 200
 
 
 def test_neighbors_inside_map():

@@ -16,6 +16,10 @@ def check_if_hit(x1: int, y1: int, x2: int, y2: int, threshold: int) -> bool:
         return False
 
 
+def manhattan_distance(x1: int, y1: int, x2: int, y2: int) -> int:
+    return abs(x1 - x2) + abs(y1 - y2)
+
+
 def get_neighbors(matrix: np.ndarray, row: int, col: int) -> Dict[str, Union[int, Any]]:
     neighbors = {
         'L': None,

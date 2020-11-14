@@ -1,6 +1,5 @@
 import os
 import sys
-from itertools import product
 from typing import Tuple, List, Dict
 
 import numpy as np

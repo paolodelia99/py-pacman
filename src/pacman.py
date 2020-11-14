@@ -220,7 +220,7 @@ class Pacman(object):
                     if self.sounds_active:
                         self.snd_eat_gh.play()
 
-                    ghost.set_spectacles()
+                    ghost.set_spectacles(game.path_finder)
                     game.set_mode(GameMode.wait_after_eating_ghost)
 
     def set_start_anim(self):

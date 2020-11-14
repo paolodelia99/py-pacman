@@ -177,13 +177,19 @@ class Ghost(object):
         self.state = GhostState.vulnerable
         self.value = 200
 
-    def set_spectacles(self):
+    def set_spectacles(self, path_finder: PathFinder):
         self.state = GhostState.spectacles
         self.value = 0
         self.speed *= 4
-        self.x = self.nearest_col * TILE_SIZE
-        self.y = self.nearest_row * TILE_SIZE
-        # fixme: find path to home
+        self.x = self.nearest_col * 16
+        self.y = self.nearest_row * 16
+        self.current_path = path_finder.get_min_path(
+            self.nearest_col,
+            self.nearest_row,
+            self.respawn_x,
+            self.respawn_y
+        )
+        self.follow_next_path(path_finder, None) # Fixme: pay attention
 
     def follow_next_path(self, path_finder: PathFinder, player: Pacman, random=False):
         if self.current_path is not None:
@@ -227,8 +233,8 @@ class Ghost(object):
                 self.follow_next_path(path_finder, player)
 
     def init_respawn_home(self, resp_x: int, resp_y: int):
-        self.respawn_x = resp_x * TILE_SIZE
-        self.respawn_y = resp_y * TILE_SIZE
+        self.respawn_x = resp_x
+        self.respawn_y = resp_y
 
     def init_for_game(self, path_finder: PathFinder, player: Pacman):
         self.vel_x = 0

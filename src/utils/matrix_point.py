@@ -1,5 +1,5 @@
 from typing import Dict, Any, Optional
-
+import copy
 
 def manhattan_distance(x1: int, y1: int, x2: int, y2: int) -> int:
     return abs(x1 - x2) + abs(y1 - y2)
@@ -67,6 +67,14 @@ class MatrixPoint(Point):
     def get_parent_orientation(self):
         return self.get_cross_neighbor_orientation(self.parent)
 
+    def get_cross_neighbor_orientation(self, point2) -> Optional[str]:
+        if self.is_cross_neighbor(point2):
+            for k, point in self.get_cross_neighbors().items():
+                if point2.same_position(point):
+                    return k
+        else:
+            return None
+
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y and self.value == other.value
 
@@ -75,3 +83,6 @@ class MatrixPoint(Point):
 
     def __str__(self):
         return f"Matrix Point value: {self.value}, x: {self.x}, y: {self.y}"
+
+    def __copy__(self):
+        return MatrixPoint(self.value, self.x, self.y)

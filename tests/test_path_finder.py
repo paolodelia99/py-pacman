@@ -16,3 +16,4 @@ def test_a_star():
     path_matrix = maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE)
     path_finder = PathFinder(path_matrix)
     path = path_finder.get_min_path(12, 12, 9, 10)
+    assert path == ['D', 'D', 'L', 'L', 'L', 'U', 'U', 'U', 'U']

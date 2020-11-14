@@ -38,7 +38,8 @@ class PathFinder(object):
 
         open_set: Set[MatrixPoint] = set()
         closed_set: Set[MatrixPoint] = set()
-        current = MatrixPoint(self.state_map[y1][x1], x1, y1)
+        start = MatrixPoint(self.state_map[y1][x1], x1, y1)
+        current = start.__copy__()
         goal = MatrixPoint(self.state_map[y2][x2], x2, y2)
 
         open_set.add(current)
@@ -47,7 +48,7 @@ class PathFinder(object):
             current = min(open_set, key=lambda item: item.get_cost(goal))
 
             if current.same_position(goal):
-                PathFinder.return_min_path(current)
+                return PathFinder.return_min_path(current)
 
             open_set.remove(current)
             closed_set.add(current)
@@ -67,6 +68,8 @@ class PathFinder(object):
                     m_point.g = current.g + 1
                     m_point.set_parent(current)
                     open_set.add(m_point)
+
+        raise NoPathFoundException(start, goal)
 
     def check_point_validity(self, x: int, y: int):
         if not (0 < x < self.map_shape[1] and 0 < y < self.map_shape[1]):

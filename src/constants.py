@@ -121,3 +121,10 @@ PATH_FINDER_LOOKUP_TABLE: Dict[int, int] = {
     36: 0,
     40: 0
 }
+
+INVERT_ORIENTATION_TABLE: Dict[str, str] = {
+    'D': 'U',
+    'U': 'D',
+    'L': 'R',
+    'R': 'L'
+}

@@ -10,3 +10,9 @@ def test_path_matrix_101():
     assert path_matrix.shape == (22, 19)
     assert path_matrix.max() == 100
     assert path_matrix.min() == 0
+
+
+def test_a_star():
+    path_matrix = maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE)
+    path_finder = PathFinder(path_matrix)
+    path = path_finder.get_min_path(12, 12, 9, 10)

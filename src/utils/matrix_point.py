@@ -36,6 +36,12 @@ class Point(object):
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
 
+    def __hash__(self):
+        return hash((self.x, self.y))
+
+    def __str__(self):
+        return f"Point x: {self.x}, y: {self.y}"
+
 
 class MatrixPoint(Point):
 
@@ -43,13 +49,29 @@ class MatrixPoint(Point):
         super().__init__(x, y)
         self.value = value
         self.parent = None
+        self.g = 0
 
     def get_cost(self, point2) -> int:
-        return self.value + self.get_distance(point2)
+        return self.value + self.g + self.get_distance(point2)
 
     def set_parent(self, point2):
         if self.get_distance(point2) == 1 and self.is_cross_neighbor(point2):
             self.parent = point2
 
+    def is_cross_neighbor(self, point2) -> bool:
+        return [point2.same_position(point) for k, point in self.get_cross_neighbors().items()].count(True) > 0
+
+    def same_position(self, point2: Point):
+        return self.x == point2.x and self.y == point2.y
+
+    def get_parent_orientation(self):
+        return self.get_cross_neighbor_orientation(self.parent)
+
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y and self.value == other.value
+
+    def __hash__(self):
+        return hash((self.x, self.y, self.value))
+
+    def __str__(self):
+        return f"Matrix Point value: {self.value}, x: {self.x}, y: {self.y}"

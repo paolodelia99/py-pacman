@@ -2,6 +2,8 @@
 
 The classic game of Pacman built with Pygame.
 
+![example](res/pacman-example.gif)
+
 # Quick Start
 
 Install the requirements

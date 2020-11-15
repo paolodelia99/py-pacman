@@ -136,9 +136,15 @@ class Game(object):
                         self.channel_background.stop()
 
     def move_players(self):
-        self.player.move(self.maze, self)
+        player_th = threading.Thread(target=self.player.move, args=(self.maze, self,))
+        ghosts_th = threading.Thread(target=self.move_ghosts)
+        update_th = threading.Thread(target=self.update_player_position)  # todo: to implement
 
-        self.move_ghosts()
+        player_th.start()
+        ghosts_th.start()
+
+        player_th.join()
+        ghosts_th.join()
 
     def move_ghosts(self):
         for ghost in self.ghosts:

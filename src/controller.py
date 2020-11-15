@@ -1,9 +1,8 @@
 import pygame as pg
 import pygame_menu
-
 from pygame_menu.themes import Theme
+
 from src.game import Game
-from .constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from .map import Map
 
 
@@ -19,6 +18,7 @@ class Controller(object):
             title_font=pygame_menu.font.FONT_8BIT,
             widget_font=pygame_menu.font.FONT_8BIT
         )
+        pg.display.set_caption("Pacman")
 
     def load_level(self):
         game = Game(

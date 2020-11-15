@@ -203,6 +203,7 @@ class Ghost(object):
     def set_vulnerable(self):
         self.state = GhostState.vulnerable
         self.value = 200
+        self.speed = 2
 
     def set_spectacles(self, path_finder: PathFinder, player: Pacman):
         self.state = GhostState.spectacles

@@ -25,6 +25,7 @@ Run the game with others layout
 # Todos
 
 - [ ] implement fruit
+- [ ] state matrix in another screen
 - [ ] implement AI bot that is going to beat everything
 
 # License

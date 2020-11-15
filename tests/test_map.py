@@ -7,7 +7,7 @@ screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 
 def test_map_init():
-    maze = Map('test')
+    maze = Map('classic')
     assert maze.map_matrix.shape == (22, 19)
     assert maze.map_matrix.min() == 10
     assert maze.map_matrix.max() == 40
@@ -16,7 +16,7 @@ def test_map_init():
 
 
 def test_state_map():
-    maze = Map('test')
+    maze = Map('classic')
     assert maze.state_matrix.shape == (22, 19)
     assert maze.state_matrix.min() == -1
     assert maze.state_matrix.max() == 2
@@ -24,17 +24,17 @@ def test_state_map():
 
 
 def test_tile_map():
-    maze = Map('test')
+    maze = Map('classic')
     maze.build_tile_map()
     assert type(maze.tile_map) == dict
     assert maze.tile_map.__len__() == 418
 
 
 def test_get_player_init_position():
-    maze = Map('test')
+    maze = Map('classic')
     assert maze.get_player_home() == (9, 16)
 
 
 def test_get_number_of_pellets():
-    maze = Map('test')
+    maze = Map('classic')
     assert maze.get_number_of_pellets() == 181

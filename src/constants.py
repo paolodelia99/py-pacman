@@ -57,7 +57,8 @@ TILE_LOOKUP_TABLE: Dict[int, str] = {
     33: 'ghost-blinky.gif',
     34: 'ghost-inky.gif',
     35: 'ghost-pinky.gif',
-    36: 'ghost-sue.gif'
+    36: 'ghost-sue.gif',
+    50: 'blank.gif'
 }
 
 STATE_LOOKUP_TABLE: Dict[int, int] = {
@@ -88,7 +89,8 @@ STATE_LOOKUP_TABLE: Dict[int, int] = {
     34: -1,
     35: -1,
     36: -1,
-    40: 0
+    40: 0,
+    50: 0
 }
 
 PATH_FINDER_LOOKUP_TABLE: Dict[int, int] = {
@@ -119,7 +121,8 @@ PATH_FINDER_LOOKUP_TABLE: Dict[int, int] = {
     34: 0,
     35: 0,
     36: 0,
-    40: 0
+    40: 0,
+    50: 1000
 }
 
 INVERT_ORIENTATION_TABLE: Dict[str, str] = {

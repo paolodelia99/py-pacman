@@ -136,13 +136,13 @@ class Game(object):
                         self.channel_background.stop()
 
     def move_players(self):
-        player_th = threading.Thread(target=self.player.move, args=(self.maze, self,))
-        player_th.start()
+        self.player.move(self.maze, self)
 
+        self.move_ghosts()
+
+    def move_ghosts(self):
         for ghost in self.ghosts:
             ghost.move(path_finder=self.path_finder, player=self.player)
-
-        player_th.join()
 
     def draw(self):
         th1 = threading.Thread(target=self.maze.draw, args=(self.screen,))
@@ -196,7 +196,7 @@ class Game(object):
         elif self.game_mode == GameMode.hit_ghost:
             self.play_bkg_sound(self.snd_death, 1)
         elif self.game_mode == GameMode.change_ghosts \
-                or self.are_ghosts_vulnerable():
+                or self.is_at_least_a_ghost_vulnerable():
             self.play_bkg_sound(self.snd_extra_pac)
         else:
             self.channel_background.stop()
@@ -213,9 +213,7 @@ class Game(object):
             if self.mode_timer == 264:
                 self.set_mode(1)
         elif self.game_mode == GameMode.normal:
-            for ghost in self.ghosts:
-                # fixme: make the ghost move ghost.move()
-                pass
+            pass
         elif self.game_mode == GameMode.hit_ghost:
             if self.mode_timer == 90:
                 self.restart()
@@ -239,6 +237,17 @@ class Game(object):
                 self.value_to_draw = 0
         elif self.game_mode == GameMode.wait_after_finishing_level:
             pass
+        elif self.game_mode == GameMode.wait_after_eating_ghost:
+
+            self.move_ghosts()
+
+            if self.maze.get_number_of_pellets():
+                self.set_mode(GameMode.wait_after_finishing_level)
+            elif self.are_all_ghosts_vulnerable():
+                self.set_mode(GameMode.change_ghosts)
+            elif self.are_all_ghosts_normal():
+                self.set_mode(GameMode.normal)
+
         elif self.game_mode == GameMode.change_ghosts:
             pass
 
@@ -247,7 +256,7 @@ class Game(object):
         self.mode_timer += 1
 
     def check_ghosts_state(self):
-        if self.are_ghosts_vulnerable():
+        if self.is_at_least_a_ghost_vulnerable():
             if self.ghosts_timer == 360:
                 self.set_mode(GameMode.normal)
                 for ghost in self.ghosts:
@@ -255,8 +264,17 @@ class Game(object):
             else:
                 self.ghosts_timer += 1
 
-    def are_ghosts_vulnerable(self) -> bool:
+    def is_at_least_a_ghost_vulnerable(self) -> bool:
         return [ghost.state == GhostState.vulnerable for ghost in self.ghosts].count(True) > 0
+
+    def are_all_ghosts_vulnerable(self) -> bool:
+        return [ghost.state == GhostState.vulnerable for ghost in self.ghosts].count(True) == 4
+
+    def are_all_ghosts_normal(self) -> bool:
+        return [ghost.state == GhostState.normal for ghost in self.ghosts].count(True) == 4
+
+    def is_at_least_a_ghost_spectacles(self) -> bool:
+        return [ghost.state == GhostState.spectacles for ghost in self.ghosts].count(True) > 0
 
     def make_ghosts_vulnerable(self):
         self.ghosts_timer = 0
@@ -276,3 +294,12 @@ class Game(object):
     def draw_ghost_value(self, value):
         self.draw_value = True
         self.value_to_draw = value
+
+    def print_positions(self):
+        # self.player.print_position()
+        for ghost in self.ghosts:
+            ghost.print_position()
+
+    def update_player_position(self):
+
+        pass

@@ -123,8 +123,7 @@ class Map:
     def get_map_sizes(self) -> Tuple[int, int]:
         return self.shape[1] * TILE_SIZE, (self.shape[0] + 1) * TILE_SIZE
 
-    def get_ghosts_home(self, num_ghosts: int) -> List:
-        # fixme: return a dict ??
+    def get_ghosts_home(self, num_ghosts: int) -> List[Dict[str, int]]:
         ghosts_home = []
 
         for i in range(0, num_ghosts):

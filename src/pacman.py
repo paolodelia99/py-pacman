@@ -68,7 +68,7 @@ class Pacman(object):
         self.x = home_x * TILE_SIZE
         self.y = home_y * TILE_SIZE
         self.nearest_row = home_y
-        self.nearest_row = home_x
+        self.nearest_col = home_x
 
     def move(self, maze: Map, game):
         self.nearest_row = int(((self.y + TILE_SIZE / 2) / TILE_SIZE))
@@ -220,7 +220,7 @@ class Pacman(object):
                     if self.sounds_active:
                         self.snd_eat_gh.play()
 
-                    ghost.set_spectacles(game.path_finder)
+                    ghost.set_spectacles(game.path_finder, game.player)
                     game.set_mode(GameMode.wait_after_eating_ghost)
 
     def set_start_anim(self):
@@ -230,3 +230,6 @@ class Pacman(object):
     def set_vel_to_zero(self):
         self.vel_x = 0
         self.vel_y = 0
+
+    def print_position(self):
+        print(f"Pacman col: {self.nearest_col}, row: {self.nearest_row}")

@@ -37,12 +37,12 @@ class Map:
             return True
 
         if 0 <= row < self.shape[0] and 0 <= col < self.shape[1]:
-            return self.state_matrix[row][col] == 2
+            return self.state_matrix[row][col] == -10
         else:
             return False
 
     def is_ghost(self, x: int, y: int) -> bool:
-        return self.state_matrix[x:int, y:int] == -1
+        return self.state_matrix[x:int, y:int] == -5
 
     def is_biscuit(self, x: int, y: int) -> bool:
         return self.state_matrix[x:int, y:int] == 1

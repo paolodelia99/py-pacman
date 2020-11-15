@@ -22,7 +22,7 @@ def test_map_init():
 def test_state_map():
     maze = Map('classic')
     assert maze.state_matrix.shape == (22, 19)
-    assert maze.state_matrix.min() == -1
+    assert maze.state_matrix.min() == -10
     assert maze.state_matrix.max() == 2
     assert maze.state_matrix.dtype == int64
 

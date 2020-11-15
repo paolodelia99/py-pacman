@@ -118,6 +118,7 @@ class Game(object):
             # control pacman
             if self.game_mode in MOVE_MODES:
                 self.move_players()
+                self.maze.update_ghosts_position(self.ghosts)
 
             pg.display.flip()
             self.clock.tick(60)
@@ -138,7 +139,6 @@ class Game(object):
     def move_players(self):
         player_th = threading.Thread(target=self.player.move, args=(self.maze, self,))
         ghosts_th = threading.Thread(target=self.move_ghosts)
-        update_th = threading.Thread(target=self.update_player_position)  # todo: to implement
 
         player_th.start()
         ghosts_th.start()
@@ -313,7 +313,3 @@ class Game(object):
     def draw_ghost_value(self, value):
         self.draw_value = True
         self.value_to_draw = value
-
-    def update_player_position(self):
-
-        pass

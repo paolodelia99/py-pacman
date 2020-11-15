@@ -35,5 +35,6 @@ def test_get_player_init_position():
     assert maze.get_player_home() == (9, 16)
 
 
-
-
+def test_get_number_of_pellets():
+    maze = Map('test')
+    assert maze.get_number_of_pellets() == 181

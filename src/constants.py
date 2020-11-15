@@ -12,10 +12,13 @@ GHOST_COLORS: Dict[int, Tuple[int, int, int, int]] = {
 VULNERABLE_GHOST_COLOR: Tuple[int, int, int, int] = (50, 50, 255, 255)
 WHITE_GHOST_COLOR: Tuple[int, int, int, int] = (255, 255, 255, 255)
 
-IMG_EDGE_LIGHT_COLOR: Tuple[int, int, int, int] = (255, 206, 255, 255)
-IMG_FILL_COLOR: Tuple[int, int, int, int] = (132, 0, 132, 255)
-IMG_EDGE_SHADOW_COLOR: Tuple[int, int, int, int] = (255, 0, 255, 255)
-IMG_PELLET_COLOR: Tuple[int, int, int, int] = (128, 0, 128, 255)
+EDGE_LIGHT_COLOR: Tuple[int, int, int, int] = (255, 206, 255, 255)
+FILL_COLOR: Tuple[int, int, int, int] = (132, 0, 132, 255)
+EDGE_SHADOW_COLOR: Tuple[int, int, int, int] = (255, 0, 255, 255)
+PELLET_COLOR: Tuple[int, int, int, int] = (128, 0, 128, 255)
+WHITE_EDGE_LIGHT_COLOR: Tuple[int, int, int, int] = (255, 255, 254, 255)
+WHITE_EDGE_SHADOW_COLOR: Tuple[int, int, int, int] = (255, 255, 254, 255)
+WHITE_FILL_COLOR: Tuple[int, int, int, int] = (0, 0, 0, 255)
 
 SCREEN_TILE_SIZE_HEIGHT: int = 23
 SCREEN_TILE_SIZE_WIDTH: int = 19
@@ -28,7 +31,10 @@ SCREEN_WIDTH: int = SCREEN_TILE_SIZE_WIDTH * TILE_SIZE
 SCREEN_HEIGHT: int = SCREEN_TILE_SIZE_HEIGHT * TILE_SIZE
 
 MODES_TO_ZERO: List = [GameMode.ready, GameMode.hit_ghost, GameMode.wait_to_start,
-                       GameMode.wait_after_eating_ghost]
+                       GameMode.wait_after_eating_ghost, GameMode.wait_after_finishing_level,
+                       GameMode.flash_maze]
+
+MOVE_MODES: List = [GameMode.normal, GameMode.change_ghosts, GameMode.wait_after_eating_ghost]
 
 TILE_LOOKUP_TABLE: Dict[int, str] = {
     10: 'blank.gif',

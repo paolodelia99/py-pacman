@@ -8,7 +8,7 @@ from pygame.mixer import SoundType
 from pygame.surface import SurfaceType
 
 from src.pacman import Pacman
-from .constants import GHOST_COLORS, TILE_SIZE, SCORE_COLWIDTH, MODES_TO_ZERO, PATH_FINDER_LOOKUP_TABLE
+from .constants import GHOST_COLORS, TILE_SIZE, SCORE_COLWIDTH, MODES_TO_ZERO, PATH_FINDER_LOOKUP_TABLE, MOVE_MODES
 from .ghost import Ghost
 from .map import Map
 from .utils.functions import get_image_surface
@@ -116,7 +116,7 @@ class Game(object):
             self.check_game_mode()
 
             # control pacman
-            if self.game_mode in [GameMode.normal, GameMode.change_ghosts, GameMode.wait_after_eating_ghost]:
+            if self.game_mode in MOVE_MODES:
                 self.move_players()
 
             pg.display.flip()
@@ -242,7 +242,18 @@ class Game(object):
                 self.draw_value = False
                 self.value_to_draw = 0
         elif self.game_mode == GameMode.wait_after_finishing_level:
-            pass
+            if self.mode_timer == 40:
+                self.set_mode(GameMode.flash_maze)
+        elif self.game_mode == GameMode.flash_maze:
+            white_set = [10, 30, 50, 70]
+            normal_set = [20, 40, 60, 80]
+
+            if not white_set.count(self.mode_timer) == 0:
+                self.maze.set_white_color()
+            elif not normal_set.count(self.mode_timer) == 0:
+                self.maze.set_normal_color()
+            elif self.mode_timer == 100:
+                self.set_mode(GameMode.black_screen)
         elif self.game_mode == GameMode.wait_after_eating_ghost:
 
             self.move_ghosts()
@@ -253,11 +264,13 @@ class Game(object):
                 self.set_mode(GameMode.change_ghosts)
             elif self.are_all_ghosts_normal():
                 self.set_mode(GameMode.normal)
-
         elif self.game_mode == GameMode.change_ghosts:
             pass
+        elif self.game_mode == GameMode.black_screen:
+            pass
 
-        self.check_ghosts_state()
+        if self.game_mode not in [GameMode.wait_after_finishing_level, GameMode.wait_to_start, GameMode.black_screen]:
+            self.check_ghosts_state()
 
         self.mode_timer += 1
 
@@ -300,11 +313,6 @@ class Game(object):
     def draw_ghost_value(self, value):
         self.draw_value = True
         self.value_to_draw = value
-
-    def print_positions(self):
-        # self.player.print_position()
-        for ghost in self.ghosts:
-            ghost.print_position()
 
     def update_player_position(self):
 

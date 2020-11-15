@@ -7,10 +7,10 @@ import numpy as np
 from .constants import STATE_LOOKUP_TABLE, \
     TILE_LOOKUP_TABLE, \
     TILE_SIZE, \
-    IMG_EDGE_LIGHT_COLOR, \
-    IMG_EDGE_SHADOW_COLOR, \
-    IMG_FILL_COLOR, \
-    IMG_PELLET_COLOR
+    EDGE_LIGHT_COLOR, \
+    EDGE_SHADOW_COLOR, \
+    FILL_COLOR, \
+    PELLET_COLOR, WHITE_EDGE_LIGHT_COLOR, WHITE_EDGE_SHADOW_COLOR, WHITE_FILL_COLOR
 from .utils.functions import get_image_surface
 
 
@@ -97,26 +97,25 @@ class Map:
         return matrix
 
     def get_number_of_pellets(self) -> int:
-        unique, counts = np.unique(self.map_matrix, return_counts=True)
-        return dict(zip(unique, counts))[10]
+        return (self.state_matrix == 1).sum()
 
     def recolor_tile(self, tile):
         for y in range(0, TILE_SIZE, 1):
             for x in range(0, TILE_SIZE, 1):
 
-                if tile.get_at((x, y)) == IMG_EDGE_LIGHT_COLOR:
+                if tile.get_at((x, y)) == EDGE_LIGHT_COLOR:
                     # wall edge
                     tile.set_at((x, y), self.edge_light_color)
 
-                elif tile.get_at((x, y)) == IMG_FILL_COLOR:
+                elif tile.get_at((x, y)) == FILL_COLOR:
                     # wall fill
                     tile.set_at((x, y), self.fill_color)
 
-                elif tile.get_at((x, y)) == IMG_EDGE_SHADOW_COLOR:
+                elif tile.get_at((x, y)) == EDGE_SHADOW_COLOR:
                     # pellet color
                     tile.set_at((x, y), self.edge_shadow_color)
 
-                elif tile.get_at((x, y)) == IMG_PELLET_COLOR:
+                elif tile.get_at((x, y)) == PELLET_COLOR:
                     # pellet color
                     tile.set_at((x, y), self.pellet_color)
 
@@ -141,3 +140,15 @@ class Map:
     def get_ghost_respawn_home(self) -> Tuple[int, int]:
         home_y, home_x = np.where(self.map_matrix == 35)
         return int(home_x[0]), int(home_y[0])
+
+    def set_white_color(self):
+        self.edge_light_color = WHITE_EDGE_LIGHT_COLOR
+        self.edge_shadow_color = WHITE_EDGE_SHADOW_COLOR
+        self.fill_color = WHITE_FILL_COLOR
+        self.build_tile_map()
+
+    def set_normal_color(self):
+        self.edge_light_color = (0, 0, 255, 255)
+        self.edge_shadow_color = (0, 0, 255, 255)
+        self.fill_color = (0, 0, 0, 255)
+        self.build_tile_map()

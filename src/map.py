@@ -10,7 +10,10 @@ from .constants import STATE_LOOKUP_TABLE, \
     EDGE_LIGHT_COLOR, \
     EDGE_SHADOW_COLOR, \
     FILL_COLOR, \
-    PELLET_COLOR, WHITE_EDGE_LIGHT_COLOR, WHITE_EDGE_SHADOW_COLOR, WHITE_FILL_COLOR
+    PELLET_COLOR, \
+    WHITE_EDGE_LIGHT_COLOR, \
+    WHITE_EDGE_SHADOW_COLOR, \
+    WHITE_FILL_COLOR
 from .utils.functions import get_image_surface
 
 
@@ -60,9 +63,6 @@ class Map:
     def get_player_home(self) -> Tuple[int, int]:
         home_y, home_x = np.where(self.map_matrix == 40)
         return int(home_x[0]), int(home_y[0])
-
-    def update_ghosts_pos(self):
-        pass
 
     def draw(self, screen):
         for row in range(self.shape[0]):
@@ -152,3 +152,16 @@ class Map:
         self.edge_shadow_color = (0, 0, 255, 255)
         self.fill_color = (0, 0, 0, 255)
         self.build_tile_map()
+
+    def update_ghosts_position(self, ghosts: List):
+
+        self.state_matrix[self.state_matrix == -5] = -99999
+
+        a = np.where(self.state_matrix == -99999)
+        pos = [(x, y) for x, y in zip(a[1], a[0])]
+
+        for x, y in pos:
+            self.state_matrix[y][x] = STATE_LOOKUP_TABLE[self.map_matrix[y][x]]
+
+        for ghost in ghosts:
+            self.state_matrix[ghost.nearest_row][ghost.nearest_col] = -1

@@ -1,7 +1,11 @@
+from typing import Tuple
+
+from src.ghost import Ghost
 from src.map import Map
 from src.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from numpy import int64
 import pygame as pg
+import numpy as np
 
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
@@ -38,3 +42,26 @@ def test_get_player_init_position():
 def test_get_number_of_pellets():
     maze = Map('classic')
     assert maze.get_number_of_pellets() == 181
+
+
+def test_update_ghosts_positions():
+    maze = Map('classic')
+    ghosts = [Ghost(i, (255, 0, 0, 255)) for i in range(4)]
+
+    def get_random_allow_position() -> Tuple[int, int]:
+        res = np.where(maze.state_matrix == 1)
+        rnd = np.random.randint(0, high=len(res[0]))
+        return res[1][rnd], res[0][rnd]
+
+    rand_pos = []
+
+    for ghost in ghosts:
+        x, y = get_random_allow_position()
+        rand_pos.append((x, y))
+        ghost.nearest_col = x
+        ghost.nearest_row = y
+
+    maze.update_ghosts_position(ghosts)
+
+    for x, y in rand_pos:
+        assert maze.state_matrix[y][x] == -1

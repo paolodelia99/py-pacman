@@ -48,7 +48,7 @@ class Ghost(object):
 
         for i in range(1, 7):
             anim[i] = pg.image.load(
-                os.path.join("res", "sprite", "ghost " + str(i) + ".gif")).convert()
+                os.path.join(sys.path[0], "res", "sprite", "ghost " + str(i) + ".gif")).convert()
 
             # change the ghost color in this frame
             for y in range(0, TILE_SIZE):

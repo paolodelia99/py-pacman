@@ -193,10 +193,10 @@ class Ghost(object):
         self.value *= 2
 
     def init_home(self, home_x: int, home_y: int):
-        self.home_x = home_x * TILE_SIZE
-        self.home_y = home_y * TILE_SIZE
-        self.x = self.home_x
-        self.y = self.home_y
+        self.home_x = home_x
+        self.home_y = home_y
+        self.x = self.home_x * TILE_SIZE
+        self.y = self.home_y * TILE_SIZE
         self.nearest_col = home_x
         self.nearest_row = home_y
 

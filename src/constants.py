@@ -99,6 +99,14 @@ STATE_LOOKUP_TABLE: Dict[int, int] = {
     50: 0
 }
 
+STATE_COLOR_LOOKUP_TABLE: Dict[int, Tuple[int, int, int]] = {
+    0: (255, 204, 204),
+    1: (255, 102, 102),
+    2: (255, 0, 0),
+    -10: (0, 0, 255),
+    -5: (51, 51, 255)
+}
+
 PATH_FINDER_LOOKUP_TABLE: Dict[int, int] = {
     10: 0,
     11: 0,

@@ -3,6 +3,7 @@ import sys
 from typing import Tuple, List, Dict
 
 import numpy as np
+import pygame as pg
 
 from .constants import STATE_LOOKUP_TABLE, \
     TILE_LOOKUP_TABLE, \
@@ -13,8 +14,10 @@ from .constants import STATE_LOOKUP_TABLE, \
     PELLET_COLOR, \
     WHITE_EDGE_LIGHT_COLOR, \
     WHITE_EDGE_SHADOW_COLOR, \
-    WHITE_FILL_COLOR
+    WHITE_FILL_COLOR, \
+    STATE_COLOR_LOOKUP_TABLE
 from .utils.functions import get_image_surface
+from .utils.ghost_state import GhostState
 
 
 class Map:
@@ -64,10 +67,20 @@ class Map:
         home_y, home_x = np.where(self.map_matrix == 40)
         return int(home_x[0]), int(home_y[0])
 
-    def draw(self, screen):
+    def draw(self, screen, draw_state: bool):
         for row in range(self.shape[0]):
             for col in range(self.shape[1]):
                 screen.blit(self.tile_map[row, col], (col * TILE_SIZE, row * TILE_SIZE))
+
+        if draw_state:
+            for y in range(self.shape[0]):
+                for x in range(self.shape[1] + 1, (self.shape[1] * 2) + 1):
+                    real_x = x - self.shape[1] - 1
+                    poly = [(x * TILE_SIZE, y * TILE_SIZE),
+                            ((x + 1) * TILE_SIZE, y * TILE_SIZE),
+                            ((x + 1) * TILE_SIZE, (y + 1) * TILE_SIZE),
+                            (x * TILE_SIZE, (y + 1) * TILE_SIZE)]
+                    pg.draw.polygon(screen, STATE_COLOR_LOOKUP_TABLE[self.state_matrix[y][real_x]], poly, 0)
 
     def build_tile_map(self):
         self.tile_map = {}
@@ -156,6 +169,7 @@ class Map:
     def update_ghosts_position(self, ghosts: List):
 
         self.state_matrix[self.state_matrix == -5] = -99999
+        self.state_matrix[self.state_matrix == 5] = -99999
 
         a = np.where(self.state_matrix == -99999)
         pos = [(x, y) for x, y in zip(a[1], a[0])]
@@ -164,4 +178,9 @@ class Map:
             self.state_matrix[y][x] = STATE_LOOKUP_TABLE[self.map_matrix[y][x]]
 
         for ghost in ghosts:
-            self.state_matrix[ghost.nearest_row][ghost.nearest_col] = -1
+            if ghost.state == GhostState.vulnerable or ghost.state == GhostState.spectacles:
+                self.state_matrix[ghost.nearest_row][ghost.nearest_col] = 5
+            else:
+                self.state_matrix[ghost.nearest_row][ghost.nearest_col] = -5
+            if ghost.nearest_row != ghost.home_y and ghost.nearest_col != ghost.home_x:
+                self.state_matrix[ghost.home_y][ghost.home_x] = 0

@@ -30,17 +30,18 @@ class Game(object):
     img_ready: SurfaceType
     img_life: SurfaceType
 
-    def __init__(self, maze: Map, screen, sounds_active: bool):
+    def __init__(self, maze: Map, screen, sounds_active: bool, state_active: bool):
         self.screen = screen
         self.screen_size = {
             "height": pg.display.Info().current_h,
-            "width": pg.display.Info().current_w
+            "width": pg.display.Info().current_w if not state_active else (pg.display.Info().current_w // 2) - 24
         }
         self.score = 0
         self.mode_timer = 0
         self.ghosts_timer = 0
         self.value_to_draw = 0
         self.sounds_active = sounds_active
+        self.state_active = state_active
         self.maze = maze
         self.maze.build_tile_map()
 
@@ -151,20 +152,20 @@ class Game(object):
             ghost.move(path_finder=self.path_finder, player=self.player)
 
     def draw(self):
-        th1 = threading.Thread(target=self.maze.draw, args=(self.screen,))
-        th2 = threading.Thread(target=self.draw_texts)
-        th3 = threading.Thread(target=self.player.draw, args=(self.screen, self.game_mode,))
+        draw_maze_th = threading.Thread(target=self.maze.draw, args=(self.screen, self.state_active))
+        draw_texts_th = threading.Thread(target=self.draw_texts)
+        draw_player_th = threading.Thread(target=self.player.draw, args=(self.screen, self.game_mode,))
 
-        th1.start()
-        th3.start()
-        th2.start()
+        draw_maze_th.start()
+        draw_player_th.start()
+        draw_texts_th.start()
 
         for ghost in self.ghosts:
             ghost.draw(self.screen, self, self.player)
 
-        th1.join()
-        th2.join()
-        th3.join()
+        draw_maze_th.join()
+        draw_texts_th.join()
+        draw_player_th.join()
 
     def draw_texts(self):
         self.draw_number(self.score, 0, self.maze.shape[0] * TILE_SIZE)

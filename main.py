@@ -14,6 +14,8 @@ def parse_args():
                         help="Name of layout to load in the game")
     parser.add_argument('-snd', '--sound', action='store_true',
                         help="Activate sounds in the game")
+    parser.add_argument('-stt', '--state', action='store_true',
+                        help="Display the state matrix of the game")
 
     args = parser.parse_args()
     return args

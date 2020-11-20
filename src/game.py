@@ -55,7 +55,7 @@ class Game(object):
         self.load_assets()
 
         self.player = Pacman(sounds_active=self.sounds_active)
-        self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, 4)]
+        self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, self.maze.get_number_of_ghosts())]
         self.path_finder = PathFinder(self.maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE))
 
     def load_assets(self):
@@ -153,19 +153,15 @@ class Game(object):
 
     def draw(self):
         draw_maze_th = threading.Thread(target=self.maze.draw, args=(self.screen, self.state_active))
-        draw_texts_th = threading.Thread(target=self.draw_texts)
-        draw_player_th = threading.Thread(target=self.player.draw, args=(self.screen, self.game_mode,))
+        self.draw_texts()
+        self.player.draw(self.screen, self.game_mode)
 
         draw_maze_th.start()
-        draw_player_th.start()
-        draw_texts_th.start()
 
         for ghost in self.ghosts:
             ghost.draw(self.screen, self, self.player)
 
         draw_maze_th.join()
-        draw_texts_th.join()
-        draw_player_th.join()
 
     def draw_texts(self):
         self.draw_number(self.score, 0, self.maze.shape[0] * TILE_SIZE)

@@ -67,6 +67,15 @@ class Map:
         home_y, home_x = np.where(self.map_matrix == 40)
         return int(home_x[0]), int(home_y[0])
 
+    def get_number_of_ghosts(self):
+        number_of_ghosts = 0
+
+        for i in range(33, 37):
+            if np.any(self.map_matrix == i):
+                number_of_ghosts += 1
+
+        return number_of_ghosts
+
     def draw(self, screen, draw_state: bool):
         for row in range(self.shape[0]):
             for col in range(self.shape[1]):
@@ -151,7 +160,8 @@ class Map:
         self.build_tile_map()
 
     def get_ghost_respawn_home(self) -> Tuple[int, int]:
-        home_y, home_x = np.where(self.map_matrix == 35)
+        g_home = 35 if np.any(self.map_matrix == 35) else 33
+        home_y, home_x = np.where(self.map_matrix == g_home)
         return int(home_x[0]), int(home_y[0])
 
     def set_white_color(self):

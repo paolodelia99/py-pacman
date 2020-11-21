@@ -32,9 +32,9 @@ def create_map(name, width: int, height: int):
             elif i == width - 1 and j == height - 1:
                 maze[i][j] = 17
             elif i == 0 or i == width - 1:
-                maze[i][j] = 26
-            elif j == 0 or j == height - 1:
                 maze[i][j] = 25
+            elif j == 0 or j == height - 1:
+                maze[i][j] = 26
             else:
                 maze[i][j] = 10
 

@@ -2,19 +2,15 @@ from typing import Tuple
 
 from src.ghost import Ghost
 from src.map import Map
-from src.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from numpy import int64
-import pygame as pg
 import numpy as np
-
-screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 
 def test_map_init():
     maze = Map('classic')
     assert maze.map_matrix.shape == (22, 19)
     assert maze.map_matrix.min() == 10
-    assert maze.map_matrix.max() == 40
+    assert maze.map_matrix.max() == 50
     assert maze.map_matrix.dtype == int64
     assert maze.map_matrix[16][9] == 40
 

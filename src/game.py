@@ -153,10 +153,9 @@ class Game(object):
 
     def draw(self):
         draw_maze_th = threading.Thread(target=self.maze.draw, args=(self.screen, self.state_active))
+        draw_maze_th.start()
         self.draw_texts()
         self.player.draw(self.screen, self.game_mode)
-
-        draw_maze_th.start()
 
         for ghost in self.ghosts:
             ghost.draw(self.screen, self, self.player)

@@ -1,7 +1,7 @@
 import os
 import sys
 import threading
-from typing import Union, Tuple, Dict
+from typing import Union, Tuple, Dict, Any
 
 import pygame as pg
 from pygame.mixer import SoundType
@@ -34,12 +34,13 @@ class Game(object):
     img_ready: SurfaceType
     img_life: SurfaceType
 
-    def __init__(self, maze: Map, screen, sounds_active: bool, state_active: bool):
+    def __init__(self, maze: Map, screen: Union[pg.SurfaceType, Any], sounds_active: bool, state_active: bool):
         self.screen = screen
-        self.screen_size = {
-            "height": pg.display.Info().current_h,
-            "width": pg.display.Info().current_w if not state_active else (pg.display.Info().current_w // 2) - 24
-        }
+        if self.screen is not None:
+            self.screen_size = {
+                "height": pg.display.Info().current_h,
+                "width": pg.display.Info().current_w if not state_active else (pg.display.Info().current_w // 2) - 24
+            }
         self.score = 0
         self.mode_timer = 0
         self.ghosts_timer = 0
@@ -57,9 +58,12 @@ class Game(object):
 
         if self.sounds_active:
             self.init_mixer()
-        self.load_assets()
+            self.load_sounds()
 
-        self.player = Pacman(sounds_active=self.sounds_active)
+        if self.screen is not None:
+            self.load_assets()
+
+        self.player = Pacman()
         self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, self.maze.get_number_of_ghosts())]
         self.path_finder = PathFinder(self.maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE))
 
@@ -72,18 +76,19 @@ class Game(object):
         self.img_game_over = get_image_surface(os.path.join(sys.path[0], "res", "text", "gameover.gif"))
         self.img_ready = get_image_surface(os.path.join(sys.path[0], "res", "text", "ready.gif"))
         self.img_life = get_image_surface(os.path.join(sys.path[0], "res", "text", "life.gif"))
-        if self.sounds_active:
-            self.snd_intro = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "levelintro.wav"))
-            self.snd_default = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "default.wav"))
-            self.snd_death = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "death.wav"))
-            self.snd_extra_pac = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "extrapac.wav"))
-            self.snd_pellet = {
-                0: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet1.wav")),
-                1: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet2.wav"))
-            }
-            self.snd_eat_gh = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatgh2.wav"))
-            self.snd_eat_fruit = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatfruit.wav"))
-            self.snd_power_pellet = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "powerpellet.wav"))
+
+    def load_sounds(self):
+        self.snd_intro = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "levelintro.wav"))
+        self.snd_default = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "default.wav"))
+        self.snd_death = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "death.wav"))
+        self.snd_extra_pac = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "extrapac.wav"))
+        self.snd_pellet = {
+            0: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet1.wav")),
+            1: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet2.wav"))
+        }
+        self.snd_eat_gh = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatgh2.wav"))
+        self.snd_eat_fruit = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatfruit.wav"))
+        self.snd_power_pellet = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "powerpellet.wav"))
 
     def init_mixer(self):
         pg.mixer.init()
@@ -140,14 +145,17 @@ class Game(object):
         self.player.check_keyboard_inputs(self)
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                pg.quit()
-                sys.exit()
+                self.quit_game()
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     self.is_run = False
                     self.start_game(restart=True)
                     if self.sounds_active:
                         self.channel_background.stop()
+
+    def quit_game(self):
+        pg.quit()
+        sys.exit()
 
     def move_players(self):
         player_th = threading.Thread(target=self.player.move, args=(self,))

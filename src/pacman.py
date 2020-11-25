@@ -9,14 +9,13 @@ from src.utils.game_mode import GameMode
 
 class Pacman(object):
 
-    def __init__(self, sounds_active: bool):
+    def __init__(self):
         self.lives = 3
         self.x = 0
         self.y = 0
         self.vel_x = 0
         self.vel_y = 0
         self.speed = 3
-        self.sounds_active = sounds_active
 
         self.nearest_row = 0
         self.nearest_col = 0

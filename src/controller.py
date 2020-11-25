@@ -14,7 +14,7 @@ class Controller(object):
         self.act_state = act_state
         self.maze = Map(layout_name)
         self.width, self.height = self.maze.get_map_sizes()
-        self.screen = self.get_screen()
+        self.screen = Controller.get_screen(act_state, self.width, self.height)
         self.menu_theme = Theme(
             title_font=pygame_menu.font.FONT_8BIT,
             widget_font=pygame_menu.font.FONT_8BIT
@@ -30,11 +30,12 @@ class Controller(object):
         )
         game.start_game()
 
-    def get_screen(self) -> pg.SurfaceType:
-        if self.act_state:
-            return pg.display.set_mode(((self.width * 2) + 48, self.height))
+    @staticmethod
+    def get_screen(act_state: bool, width: int, height: int) -> pg.SurfaceType:
+        if act_state:
+            return pg.display.set_mode(((width * 2) + 48, height))
         else:
-            return pg.display.set_mode((self.width, self.height))
+            return pg.display.set_mode((width, height))
 
     def load_menu(self):
         menu = pygame_menu.Menu(self.height, self.width,

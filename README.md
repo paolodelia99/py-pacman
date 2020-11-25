@@ -34,8 +34,9 @@ Run the game with others option
 # Todos
 
 - [ ] implement fruit
-- [ ] state matrix in another screen
-- [ ] implement AI bot that is going to beat everything
+- [ ] flashing power pellet
+- [x] state matrix in another screen
+- [ ] Provide an RL Environment so an AI agent can be trained
 
 # License
 

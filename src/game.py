@@ -1,7 +1,7 @@
 import os
 import sys
 import threading
-from typing import Union, Tuple
+from typing import Union, Tuple, Dict
 
 import pygame as pg
 from pygame.mixer import SoundType
@@ -11,7 +11,7 @@ from src.pacman import Pacman
 from .constants import GHOST_COLORS, TILE_SIZE, SCORE_COLWIDTH, MODES_TO_ZERO, PATH_FINDER_LOOKUP_TABLE, MOVE_MODES
 from .ghost import Ghost
 from .map import Map
-from .utils.functions import get_image_surface
+from .utils.functions import get_image_surface, check_if_hit
 from .utils.game_mode import GameMode
 from .utils.ghost_state import GhostState
 from .utils.path_finder import PathFinder
@@ -24,6 +24,10 @@ class Game(object):
     snd_default: SoundType
     snd_death: SoundType
     snd_extra_pac: SoundType
+    snd_pellet: Dict[int, SoundType]
+    snd_eat_gh: SoundType
+    snd_eat_fruit: SoundType
+    snd_power_pellet: SoundType
     screen_bg: object
     num_digits: dict
     img_game_over: SurfaceType
@@ -40,6 +44,7 @@ class Game(object):
         self.mode_timer = 0
         self.ghosts_timer = 0
         self.value_to_draw = 0
+        self.pellet_snd_num = 0
         self.sounds_active = sounds_active
         self.state_active = state_active
         self.maze = maze
@@ -72,6 +77,13 @@ class Game(object):
             self.snd_default = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "default.wav"))
             self.snd_death = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "death.wav"))
             self.snd_extra_pac = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "extrapac.wav"))
+            self.snd_pellet = {
+                0: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet1.wav")),
+                1: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet2.wav"))
+            }
+            self.snd_eat_gh = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatgh2.wav"))
+            self.snd_eat_fruit = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatfruit.wav"))
+            self.snd_power_pellet = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "powerpellet.wav"))
 
     def init_mixer(self):
         pg.mixer.init()
@@ -125,7 +137,7 @@ class Game(object):
             self.clock.tick(60)
 
     def event_loop(self):
-        self.player.check_keyboard_inputs(self.maze)
+        self.player.check_keyboard_inputs(self)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
@@ -138,7 +150,7 @@ class Game(object):
                         self.channel_background.stop()
 
     def move_players(self):
-        player_th = threading.Thread(target=self.player.move, args=(self.maze, self,))
+        player_th = threading.Thread(target=self.player.move, args=(self,))
         ghosts_th = threading.Thread(target=self.move_ghosts)
 
         player_th.start()
@@ -309,3 +321,82 @@ class Game(object):
     def draw_ghost_value(self, value):
         self.draw_value = True
         self.value_to_draw = value
+
+    def check_if_hit_something(self):
+        for row in range(self.player.nearest_row - 1, self.player.nearest_row + 2):
+            for col in range(self.player.nearest_col - 1, self.player.nearest_col + 2):
+                if ((self.player.x - (col * TILE_SIZE) < TILE_SIZE) and
+                        (self.player.x - (col * TILE_SIZE) > -TILE_SIZE) and
+                        (self.player.y - (row * TILE_SIZE) > -TILE_SIZE) and
+                        (self.player.y - (row * TILE_SIZE) < TILE_SIZE)):
+
+                    if self.maze.map_matrix[row][col] == 14:
+                        # got a pellet
+                        self.maze.remove_biscuit(row, col)
+                        if self.sounds_active:
+                            self.snd_pellet[self.pellet_snd_num].play()
+                        self.pellet_snd_num = 1 - self.pellet_snd_num
+                        self.add_score(10)
+
+                        if self.maze.get_number_of_pellets() == 0:
+                            self.set_mode(6)
+                    elif self.maze.map_matrix[row][col] == 15:
+                        # got a power pellet
+                        self.set_mode(9)
+                        self.maze.remove_biscuit(row, col)
+                        if self.sounds_active:
+                            self.snd_power_pellet.play()
+                        self.add_score(100)
+                        self.make_ghosts_vulnerable()
+                    elif self.maze.map_matrix[row][col] == 11:
+                        # ran into a horizontal door
+                        for i in range(self.maze.shape[1]):
+                            if not i == col:
+                                if self.maze.map_matrix[row][i] == 11:
+                                    self.player.x = i * TILE_SIZE
+                                    if self.player.vel_x > 0:
+                                        self.player.x += TILE_SIZE
+                                    else:
+                                        self.player.x -= TILE_SIZE
+                    elif self.maze.map_matrix[row][col] == 12:
+                        # ran into a vertical door
+                        for i in range(self.maze.shape[0]):
+                            if not i == row:
+                                if self.maze.map_matrix[i][col] == 12:
+                                    self.player.y = i * TILE_SIZE
+                                    if self.player.vel_y > 0:
+                                        self.player.y += TILE_SIZE
+                                    else:
+                                        self.player.y -= TILE_SIZE
+
+    def check_collision_with_ghosts(self):
+        for ghost in self.ghosts:
+            if check_if_hit(self.player.x, self.player.y, ghost.x, ghost.y, TILE_SIZE // 2):
+                if ghost.state == GhostState.normal:
+                    self.set_mode(GameMode.hit_ghost)
+                elif ghost.state == GhostState.vulnerable:
+                    self.add_score(ghost.value)
+                    self.draw_ghost_value(ghost.value)
+                    self.duplicate_vulnerable_ghosts_value()
+                    if self.sounds_active:
+                        self.snd_eat_gh.play()
+
+                    ghost.set_spectacles(self.path_finder, self.player)
+                    self.set_mode(GameMode.wait_after_eating_ghost)
+
+    def check_if_player_hit_wall(self, x: int, y: int) -> bool:
+        num_collision = 0
+
+        for row in range(self.player.nearest_row - 1, self.player.nearest_row + 2):
+            for col in range(self.player.nearest_col - 1, self.player.nearest_col + 2):
+                if ((x - (col * TILE_SIZE) < TILE_SIZE) and
+                        (x - (col * TILE_SIZE) > -TILE_SIZE) and
+                        (y - (row * TILE_SIZE) > -TILE_SIZE) and
+                        (y - (row * TILE_SIZE) < TILE_SIZE)):
+                    try:
+                        if self.maze.is_wall(row, col):
+                            num_collision += 1
+                    except Exception as e:
+                        print(e)
+
+        return num_collision > 0

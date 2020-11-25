@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pygame as pg
 
@@ -34,14 +35,14 @@ class Pacman(object):
     def load_frames(self):
         for i in range(1, 9):
             self.anim_l[i] = pg.image.load(
-                os.path.join("res", "sprite", "pacman-l " + str(i) + ".gif")).convert()
+                os.path.join(sys.path[0], "res", "sprite", "pacman-l " + str(i) + ".gif")).convert()
             self.anim_r[i] = pg.image.load(
-                os.path.join("res", "sprite", "pacman-r " + str(i) + ".gif")).convert()
+                os.path.join(sys.path[0], "res", "sprite", "pacman-r " + str(i) + ".gif")).convert()
             self.anim_u[i] = pg.image.load(
-                os.path.join("res", "sprite", "pacman-u " + str(i) + ".gif")).convert()
+                os.path.join(sys.path[0], "res", "sprite", "pacman-u " + str(i) + ".gif")).convert()
             self.anim_d[i] = pg.image.load(
-                os.path.join("res", "sprite", "pacman-d " + str(i) + ".gif")).convert()
-            self.anim_s[i] = pg.image.load(os.path.join("res", "sprite", "pacman.gif")).convert()
+                os.path.join(sys.path[0], "res", "sprite", "pacman-d " + str(i) + ".gif")).convert()
+            self.anim_s[i] = pg.image.load(os.path.join(sys.path[0], "res", "sprite", "pacman.gif")).convert()
 
     def init_home(self, home_x: int, home_y: int):
         self.x = home_x * TILE_SIZE

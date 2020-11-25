@@ -64,7 +64,7 @@ class Game(object):
         self.path_finder = PathFinder(self.maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE))
 
     def load_assets(self):
-        self.screen_bg = get_image_surface(os.path.join('res', 'backgrounds', '1.gif'))
+        self.screen_bg = get_image_surface(os.path.join(sys.path[0], 'res', 'backgrounds', '1.gif'))
         self.num_digits = {
             i: get_image_surface(os.path.join(sys.path[0], "res", "text", str(i) + ".gif"))
             for i in range(0, 10)
@@ -400,3 +400,6 @@ class Game(object):
                         print(e)
 
         return num_collision > 0
+
+    def get_rba_array(self):
+        return pg.surfarray.array3d(self.screen)

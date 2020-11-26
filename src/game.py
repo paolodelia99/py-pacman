@@ -11,6 +11,7 @@ from src.pacman import Pacman
 from .constants import GHOST_COLORS, TILE_SIZE, SCORE_COLWIDTH, MODES_TO_ZERO, PATH_FINDER_LOOKUP_TABLE, MOVE_MODES
 from .ghost import Ghost
 from .map import Map
+from .utils.action import Action
 from .utils.functions import get_image_surface, check_if_hit
 from .utils.game_mode import GameMode
 from .utils.ghost_state import GhostState
@@ -102,7 +103,7 @@ class Game(object):
 
     def init_game(self):
         self.clock = pg.time.Clock()
-        pg.mouse.set_visible(False)
+        pg.mouse.set_visible(True)
 
     def play_bkg_sound(self, snd, loops=-1):
         self.channel_background.stop()
@@ -128,6 +129,7 @@ class Game(object):
         self.set_mode(0)
         self.init_game()
         self.init_players_in_map()
+        self.player.set_vel_to_zero()
         self.game_loop()
 
     def game_loop(self):
@@ -141,13 +143,13 @@ class Game(object):
             # control pacman
             if self.game_mode in MOVE_MODES:
                 self.move_players()
-                self.maze.update_ghosts_position(self.ghosts)
 
             pg.display.flip()
             self.clock.tick(60)
 
     def event_loop(self):
-        self.player.check_keyboard_inputs(self)
+        action = Game.check_keyboard_inputs()
+        self.player.change_player_vel(action, self)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.quit_game()
@@ -157,6 +159,19 @@ class Game(object):
                     self.start_game(restart=True)
                     if self.sounds_active:
                         self.channel_background.stop()
+
+    @staticmethod
+    def check_keyboard_inputs() -> Action:
+        if pg.key.get_pressed()[pg.K_LEFT]:
+            return Action.LEFT
+        elif pg.key.get_pressed()[pg.K_RIGHT]:
+            return Action.RIGHT
+        elif pg.key.get_pressed()[pg.K_UP]:
+            return Action.UP
+        elif pg.key.get_pressed()[pg.K_DOWN]:
+            return Action.DOWN
+        else:
+            return Action.NONE
 
     def quit_game(self):
         pg.quit()
@@ -171,10 +186,14 @@ class Game(object):
 
         player_th.join()
         ghosts_th.join()
+        self.update_ghosts_position_in_map()
 
     def move_ghosts(self):
         for ghost in self.ghosts:
             ghost.move(path_finder=self.path_finder, player=self.player)
+
+    def update_ghosts_position_in_map(self):
+        self.maze.update_ghosts_position(self.ghosts)
 
     def draw(self):
         draw_maze_th = threading.Thread(target=self.maze.draw, args=(self.screen, self.state_active))
@@ -324,6 +343,11 @@ class Game(object):
         for ghost in self.ghosts:
             ghost.set_vulnerable()
 
+    def make_ghosts_normal(self):
+        self.ghosts_timer = 0
+        for ghost in self.ghosts:
+            ghost.set_normal()
+
     def duplicate_vulnerable_ghosts_value(self):
         for ghost in self.ghosts:
             if ghost.state == GhostState.vulnerable:
@@ -348,7 +372,7 @@ class Game(object):
 
                     if self.maze.map_matrix[row][col] == 14:
                         # got a pellet
-                        self.maze.remove_biscuit(row, col)
+                        self.maze.remove_biscuit(row, col, self.screen is not None)
                         if self.sounds_active:
                             self.snd_pellet[self.pellet_snd_num].play()
                         self.pellet_snd_num = 1 - self.pellet_snd_num
@@ -360,7 +384,7 @@ class Game(object):
                     elif self.maze.map_matrix[row][col] == 15:
                         # got a power pellet
                         self.set_mode(9)
-                        self.maze.remove_biscuit(row, col)
+                        self.maze.remove_biscuit(row, col, self.screen is not None)
                         if self.sounds_active:
                             self.snd_power_pellet.play()
                         self.add_score(100)

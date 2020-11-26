@@ -4,6 +4,7 @@ import sys
 import pygame as pg
 
 from src.constants import TILE_SIZE
+from src.utils.action import Action
 from src.utils.game_mode import GameMode
 
 
@@ -98,36 +99,6 @@ class Pacman(object):
             if self.anim_frame == 9:
                 self.anim_frame = 1
 
-    def check_keyboard_inputs(self, game):
-        if pg.key.get_pressed()[pg.K_LEFT]:
-            if not (self.vel_x == -self.speed and self.vel_y == 0) \
-                    and not game.check_if_player_hit_wall(
-                    self.x - self.speed,
-                    self.y):
-                self.vel_x = -self.speed
-                self.vel_y = 0
-        elif pg.key.get_pressed()[pg.K_RIGHT]:
-            if not (self.vel_x == self.speed and self.vel_y == 0) \
-                    and not game.check_if_player_hit_wall(
-                    self.x + self.speed,
-                    self.y):
-                self.vel_x = self.speed
-                self.vel_y = 0
-        elif pg.key.get_pressed()[pg.K_UP]:
-            if not (self.vel_y == -self.speed and self.vel_x == 0) \
-                    and not game.check_if_player_hit_wall(
-                    self.x,
-                    self.y - self.speed):
-                self.vel_y = -self.speed
-                self.vel_x = 0
-        elif pg.key.get_pressed()[pg.K_DOWN]:
-            if not (self.vel_y == +self.speed and self.vel_x == 0) \
-                    and not game.check_if_player_hit_wall(
-                    self.x,
-                    self.y + self.speed):
-                self.vel_y = self.speed
-                self.vel_x = 0
-
     def set_start_anim(self):
         self.current_anim = self.anim_s
         self.anim_frame = 3
@@ -136,19 +107,35 @@ class Pacman(object):
         self.vel_x = 0
         self.vel_y = 0
 
-    def change_player_speed(self, action):
-        if action.LEFT:
-            self.vel_x = -self.speed
-            self.vel_y = 0
-        elif action.RIGHT:
-            self.vel_x = self.speed
-            self.vel_y = 0
-        elif action.UP:
-            self.vel_y = -self.speed
-            self.vel_x = 0
-        elif action.DOWN:
-            self.vel_y = self.speed
-            self.vel_x = 0
+    def change_player_vel(self, action: Action, game):
+        if action == action.LEFT:
+            if not (self.vel_x == -self.speed and self.vel_y == 0) \
+                    and not game.check_if_player_hit_wall(
+                    self.x - self.speed,
+                    self.y):
+                self.vel_x = -self.speed
+                self.vel_y = 0
+        elif action == action.RIGHT:
+            if not (self.vel_x == self.speed and self.vel_y == 0) \
+                    and not game.check_if_player_hit_wall(
+                    self.x + self.speed,
+                    self.y):
+                self.vel_x = self.speed
+                self.vel_y = 0
+        elif action == action.UP:
+            if not (self.vel_y == -self.speed and self.vel_x == 0) \
+                    and not game.check_if_player_hit_wall(
+                    self.x,
+                    self.y - self.speed):
+                self.vel_y = -self.speed
+                self.vel_x = 0
+        elif action == action.DOWN:
+            if not (self.vel_y == +self.speed and self.vel_x == 0) \
+                    and not game.check_if_player_hit_wall(
+                    self.x,
+                    self.y + self.speed):
+                self.vel_y = self.speed
+                self.vel_x = 0
 
     def print_position(self):
         print(f"Pacman col: {self.nearest_col}, row: {self.nearest_row}")

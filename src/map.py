@@ -53,15 +53,16 @@ class Map:
     def is_pill(self, x: int, y: int) -> bool:
         return self.map_matrix[x:int, y:int] == 15
 
-    def remove_biscuit(self, x: int, y: int):
+    def remove_biscuit(self, x: int, y: int, is_screen_active: bool = True):
         self.map_matrix[x][y] = 10
         self.state_matrix[x][y] = 0
-        self.tile_map[x, y] = get_image_surface(os.path.join(
-            sys.path[0],
-            "res",
-            "tiles",
-            TILE_LOOKUP_TABLE[self.map_matrix[x][y]]
-        ))
+        if is_screen_active:
+            self.tile_map[x, y] = get_image_surface(os.path.join(
+                sys.path[0],
+                "res",
+                "tiles",
+                TILE_LOOKUP_TABLE[self.map_matrix[x][y]]
+            ))
 
     def get_player_home(self) -> Tuple[int, int]:
         home_y, home_x = np.where(self.map_matrix == 40)

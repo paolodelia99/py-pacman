@@ -12,15 +12,8 @@ from gym.utils import seeding
 from src.game import Game
 from src.controller import Controller
 from src.map import Map
+from src.utils.action import Action
 from src.utils.game_mode import GameMode
-
-
-class Action(Enum):
-    LEFT = 0
-    RIGHT = 1
-    UP = 2
-    DOWN = 3
-    NONE = 4
 
 
 class PacmanEnv(gym.Env):
@@ -48,6 +41,7 @@ class PacmanEnv(gym.Env):
             state_active=state_active
         )
         self.timer = 0
+        self.reinit_game = False
 
         self.seed()
 
@@ -67,6 +61,7 @@ class PacmanEnv(gym.Env):
     def render(self, mode='human'):
         self.game.init_screen()
         self.game.draw()
+        pg.display.flip()
 
     def close(self):
         self.__del__()
@@ -84,7 +79,7 @@ class PacmanEnv(gym.Env):
         return sum(self._one_step_action(action) for _ in range(self.frame_to_skip))
 
     def step(self, action: Union[Action, int]):
-        action = GameMode(action) if type(action) is int else action
+        action = Action(action) if type(action) is int else action
         rewards = self.act(action)
         done = self.get_mode() == GameMode.game_over or self.get_mode() == GameMode.black_screen
         obs = self.get_state_matrix()
@@ -92,7 +87,8 @@ class PacmanEnv(gym.Env):
             'win': self.get_mode() == GameMode.black_screen,
             'player position': self.get_player_position(),
             'player pixel position': self.get_player_pixel_position(),
-            'game mode': self.get_mode(),
+            'player lives': self.game.player.lives,
+            'game mode': self.get_mode().value,
             'game score': self.game.score
         }
         return obs, rewards, done, info
@@ -104,15 +100,18 @@ class PacmanEnv(gym.Env):
             return 0
         elif self.get_mode() is GameMode.black_screen:
             return 0
+        elif self.reinit_game:
+            self.reinit_game = False
+            return 0
 
-        prev_score = self.game.score
+        prev_reward = self.game.total_rewards
 
-        self.game.player.change_player_speed(action)
+        self.game.player.change_player_vel(action, self.game)
         self.game.move_players()
 
-        succ_score = self.game.score
+        succ_reward = self.game.total_rewards
 
-        return succ_score - prev_score
+        return succ_reward - prev_reward
 
     def get_mode(self) -> GameMode:
         return self.game.game_mode
@@ -140,10 +139,14 @@ class PacmanEnv(gym.Env):
         mode = self.get_mode()
 
         if mode is GameMode.hit_ghost:
-            if self.game.player.lives != -1:
-                self.game.init_players_in_map()
-            else:
+            self.game.player.lives -= 1
+            if self.game.player.lives == -1:
                 self.game.set_mode(GameMode.game_over)
+            else:
+                self.game.init_players_in_map()
+                self.game.make_ghosts_normal()
+                self.game.set_mode(GameMode.normal)
+                self.reinit_game = True
         elif mode == GameMode.wait_after_eating_ghost:
 
             self.game.move_ghosts()

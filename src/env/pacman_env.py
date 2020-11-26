@@ -1,16 +1,13 @@
-from enum import Enum
 from typing import Union, Tuple
 
-import pygame as pg
-
-import numpy as np
-
 import gym
+import numpy as np
+import pygame as pg
 from gym import spaces
 from gym.utils import seeding
 
-from src.game import Game
 from src.controller import Controller
+from src.game import Game
 from src.map import Map
 from src.utils.action import Action
 from src.utils.game_mode import GameMode
@@ -23,7 +20,10 @@ class PacmanEnv(gym.Env):
     def __init__(self, layout: str, frame_to_skip: int, enable_render=True, state_active=False):
         """
 
-        :type frame_to_skip: int
+        :param layout:
+        :param frame_to_skip:
+        :param enable_render:
+        :param state_active:
         """
         self.layout = layout
         self.state_active = state_active
@@ -59,9 +59,12 @@ class PacmanEnv(gym.Env):
         self.game.set_mode(GameMode.normal)
 
     def render(self, mode='human'):
-        self.game.init_screen()
-        self.game.draw()
-        pg.display.flip()
+        if mode == 'human':
+            self.game.init_screen()
+            self.game.draw()
+            pg.display.flip()
+        elif mode == 'rgb_array':
+            return pg.surfarray.array3d(self.game.screen)
 
     def close(self):
         self.__del__()
@@ -70,10 +73,9 @@ class PacmanEnv(gym.Env):
         """
         Perform an action on the game. We lockstep frames with actions. If act is not called the game will not run.
 
-        :argument action
-            The index of the action we wish to perform. The index usually corresponds to the index item returned by getActionSet().
+        :param action The index of the action we wish to perform
 
-        :returns: Returns the reward that the agent has accumlated while performing the action.
+        :returns: Returns the reward that the agent has accumulated while performing the action.
 
         """
         return sum(self._one_step_action(action) for _ in range(self.frame_to_skip))

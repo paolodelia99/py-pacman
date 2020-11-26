@@ -79,6 +79,7 @@ def test_env_with_render():
         assert type(rewards) is int
         assert type(done) is bool
         assert type(info) is dict
+        logger.info("reawrds {}".format(rewards))
         if done:
             logger.info("Episode finished after {} timesteps".format(i + 1))
             break

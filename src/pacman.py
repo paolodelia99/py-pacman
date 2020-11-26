@@ -1,9 +1,9 @@
 import os
-import sys
+from typing import Union
 
 import pygame as pg
 
-from src.constants import TILE_SIZE
+from src.constants import TILE_SIZE, ROOT_DIR
 from src.utils.action import Action
 from src.utils.game_mode import GameMode
 
@@ -36,14 +36,14 @@ class Pacman(object):
     def load_frames(self):
         for i in range(1, 9):
             self.anim_l[i] = pg.image.load(
-                os.path.join(sys.path[0], "res", "sprite", "pacman-l " + str(i) + ".gif")).convert()
+                os.path.join(ROOT_DIR, "res", "sprite", "pacman-l " + str(i) + ".gif")).convert()
             self.anim_r[i] = pg.image.load(
-                os.path.join(sys.path[0], "res", "sprite", "pacman-r " + str(i) + ".gif")).convert()
+                os.path.join(ROOT_DIR, "res", "sprite", "pacman-r " + str(i) + ".gif")).convert()
             self.anim_u[i] = pg.image.load(
-                os.path.join(sys.path[0], "res", "sprite", "pacman-u " + str(i) + ".gif")).convert()
+                os.path.join(ROOT_DIR, "res", "sprite", "pacman-u " + str(i) + ".gif")).convert()
             self.anim_d[i] = pg.image.load(
-                os.path.join(sys.path[0], "res", "sprite", "pacman-d " + str(i) + ".gif")).convert()
-            self.anim_s[i] = pg.image.load(os.path.join(sys.path[0], "res", "sprite", "pacman.gif")).convert()
+                os.path.join(ROOT_DIR, "res", "sprite", "pacman-d " + str(i) + ".gif")).convert()
+            self.anim_s[i] = pg.image.load(os.path.join(ROOT_DIR, "res", "sprite", "pacman.gif")).convert()
 
     def init_home(self, home_x: int, home_y: int):
         if self.home_x == 0 and self.home_y == 0:
@@ -107,7 +107,8 @@ class Pacman(object):
         self.vel_x = 0
         self.vel_y = 0
 
-    def change_player_vel(self, action: Action, game):
+    def change_player_vel(self, action: Union[Action, int], game):
+        action = Action(int(action)) if type(action) is int else action
         if action == action.LEFT:
             if not (self.vel_x == -self.speed and self.vel_y == 0) \
                     and not game.check_if_player_hit_wall(

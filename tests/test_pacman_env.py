@@ -66,7 +66,7 @@ def test_env_without_render():
 def test_env_with_render():
     env = PacmanEnv(
         layout='classic',
-        frame_to_skip=5,
+        frame_to_skip=10,
         enable_render=True
     )
     env.reset()

@@ -15,7 +15,8 @@ from .constants import STATE_LOOKUP_TABLE, \
     WHITE_EDGE_LIGHT_COLOR, \
     WHITE_EDGE_SHADOW_COLOR, \
     WHITE_FILL_COLOR, \
-    STATE_COLOR_LOOKUP_TABLE
+    STATE_COLOR_LOOKUP_TABLE, \
+    ROOT_DIR
 from .utils.functions import get_image_surface
 from .utils.ghost_state import GhostState
 
@@ -23,7 +24,7 @@ from .utils.ghost_state import GhostState
 class Map:
 
     def __init__(self, layout_name):
-        self.map_matrix = np.loadtxt(os.path.join(sys.path[0], 'res', 'layouts', layout_name + '.lay')).astype(int)
+        self.map_matrix = np.loadtxt(os.path.join(ROOT_DIR, 'res', 'layouts', layout_name + '.lay')).astype(int)
         self.shape = self.map_matrix.shape
         self.edge_light_color = (0, 0, 255, 255)
         self.edge_shadow_color = (0, 0, 255, 255)
@@ -58,7 +59,7 @@ class Map:
         self.state_matrix[x][y] = 0
         if is_screen_active:
             self.tile_map[x, y] = get_image_surface(os.path.join(
-                sys.path[0],
+                ROOT_DIR,
                 "res",
                 "tiles",
                 TILE_LOOKUP_TABLE[self.map_matrix[x][y]]
@@ -100,10 +101,10 @@ class Map:
                 if self.map_matrix[i][j] in [40, 11, 12, 33, 34, 35, 36]:
                     # position of pacman, the ghost or the doors
                     self.tile_map[i, j] = get_image_surface(
-                        os.path.join(sys.path[0], "res", "tiles", TILE_LOOKUP_TABLE[10]))
+                        os.path.join(ROOT_DIR, "res", "tiles", TILE_LOOKUP_TABLE[10]))
                 else:
                     self.tile_map[i, j] = get_image_surface(os.path.join(
-                        sys.path[0],
+                        ROOT_DIR,
                         "res",
                         "tiles",
                         TILE_LOOKUP_TABLE[self.map_matrix[i][j]]
@@ -156,7 +157,7 @@ class Map:
         return ghosts_home
 
     def reinit_map(self):
-        self.map_matrix = np.loadtxt(os.path.join('res', 'layouts', self.layout_name + '.lay')).astype(int)
+        self.map_matrix = np.loadtxt(os.path.join(ROOT_DIR, 'res', 'layouts', self.layout_name + '.lay')).astype(int)
         self.state_matrix = self.matrix_from_lookup_table(STATE_LOOKUP_TABLE)
         self.build_tile_map()
 

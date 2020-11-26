@@ -54,8 +54,13 @@ class PacmanEnv(gym.Env):
         return [seed]
 
     def reset(self):
+        """
+        Reset and Restart the Pacman Environment
+        """
+        self.game.maze.reinit_map()
         self.game.restart()
         self.game.player.regenerate()
+        self.game.score = 0
         self.game.set_mode(GameMode.normal)
 
     def render(self, mode='human'):
@@ -81,12 +86,19 @@ class PacmanEnv(gym.Env):
         return sum(self._one_step_action(action) for _ in range(self.frame_to_skip))
 
     def step(self, action: Union[Action, int]):
-        action = Action(action) if type(action) is int else action
+        """
+
+        :param action:
+        :return:
+        """
+        prev_position: Tuple[int, int] = (self.game.player.nearest_col, self.game.player.nearest_row)
+        action = Action(int(action)) if type(action) is int else action
         rewards = self.act(action)
         done = self.get_mode() == GameMode.game_over or self.get_mode() == GameMode.black_screen
         obs = self.get_state_matrix()
         info = {
             'win': self.get_mode() == GameMode.black_screen,
+            'prev_position': prev_position,
             'player position': self.get_player_position(),
             'player pixel position': self.get_player_pixel_position(),
             'player lives': self.game.player.lives,
@@ -96,6 +108,12 @@ class PacmanEnv(gym.Env):
         return obs, rewards, done, info
 
     def _one_step_action(self, action: Union[Action, int]):
+        """
+        Performs only one step of the given action in the enviroment
+
+        :param action: action to perform
+        :return: the reward obtained after performing the action
+        """
         self.check_game_mode()
 
         if self.get_mode() is GameMode.game_over:
@@ -116,6 +134,10 @@ class PacmanEnv(gym.Env):
         return succ_reward - prev_reward
 
     def get_mode(self) -> GameMode:
+        """
+
+        :return: the current mode of the Game, is an instance of the Enum GameMode
+        """
         return self.game.game_mode
 
     def get_state_matrix(self) -> np.ndarray:

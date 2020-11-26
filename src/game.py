@@ -8,7 +8,8 @@ from pygame.mixer import SoundType
 from pygame.surface import SurfaceType
 
 from src.pacman import Pacman
-from .constants import GHOST_COLORS, TILE_SIZE, SCORE_COLWIDTH, MODES_TO_ZERO, PATH_FINDER_LOOKUP_TABLE, MOVE_MODES
+from .constants import GHOST_COLORS, TILE_SIZE, SCORE_COLWIDTH, MODES_TO_ZERO, PATH_FINDER_LOOKUP_TABLE, MOVE_MODES, \
+    ROOT_DIR
 from .ghost import Ghost
 from .map import Map
 from .utils.action import Action
@@ -70,31 +71,31 @@ class Game(object):
             self.maze.build_tile_map()
 
     def load_assets(self):
-        self.screen_bg = get_image_surface(os.path.join(sys.path[0], 'res', 'backgrounds', '1.gif'))
+        self.screen_bg = get_image_surface(os.path.join(ROOT_DIR, 'res', 'backgrounds', '1.gif'))
         self.num_digits = {
-            i: get_image_surface(os.path.join(sys.path[0], "res", "text", str(i) + ".gif"))
+            i: get_image_surface(os.path.join(ROOT_DIR, "res", "text", str(i) + ".gif"))
             for i in range(0, 10)
         }
-        self.img_game_over = get_image_surface(os.path.join(sys.path[0], "res", "text", "gameover.gif"))
-        self.img_ready = get_image_surface(os.path.join(sys.path[0], "res", "text", "ready.gif"))
-        self.img_life = get_image_surface(os.path.join(sys.path[0], "res", "text", "life.gif"))
+        self.img_game_over = get_image_surface(os.path.join(ROOT_DIR, "res", "text", "gameover.gif"))
+        self.img_ready = get_image_surface(os.path.join(ROOT_DIR, "res", "text", "ready.gif"))
+        self.img_life = get_image_surface(os.path.join(ROOT_DIR, "res", "text", "life.gif"))
         self.player.load_frames()
         for ghost in self.ghosts:
             ghost.anim = Ghost.load_ghost_animation(ghost.ghost_color)
             ghost.load_assets()
 
     def load_sounds(self):
-        self.snd_intro = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "levelintro.wav"))
-        self.snd_default = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "default.wav"))
-        self.snd_death = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "death.wav"))
-        self.snd_extra_pac = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "extrapac.wav"))
+        self.snd_intro = pg.mixer.Sound(os.path.join(ROOT_DIR, "res", "sounds", "levelintro.wav"))
+        self.snd_default = pg.mixer.Sound(os.path.join(ROOT_DIR, "res", "sounds", "default.wav"))
+        self.snd_death = pg.mixer.Sound(os.path.join(ROOT_DIR, "res", "sounds", "death.wav"))
+        self.snd_extra_pac = pg.mixer.Sound(os.path.join(ROOT_DIR, "res", "sounds", "extrapac.wav"))
         self.snd_pellet = {
-            0: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet1.wav")),
-            1: pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "pellet2.wav"))
+            0: pg.mixer.Sound(os.path.join(ROOT_DIR, "res", "sounds", "pellet1.wav")),
+            1: pg.mixer.Sound(os.path.join(ROOT_DIR, "res", "sounds", "pellet2.wav"))
         }
-        self.snd_eat_gh = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatgh2.wav"))
-        self.snd_eat_fruit = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "eatfruit.wav"))
-        self.snd_power_pellet = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "powerpellet.wav"))
+        self.snd_eat_gh = pg.mixer.Sound(os.path.join(ROOT_DIR, "res", "sounds", "eatgh2.wav"))
+        self.snd_eat_fruit = pg.mixer.Sound(os.path.join(ROOT_DIR, "res", "sounds", "eatfruit.wav"))
+        self.snd_power_pellet = pg.mixer.Sound(os.path.join(ROOT_DIR, "res", "sounds", "powerpellet.wav"))
 
     def init_mixer(self):
         pg.mixer.init()

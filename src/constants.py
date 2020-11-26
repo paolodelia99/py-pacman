@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from typing import Tuple, List, Dict
 
 from src.utils.game_mode import GameMode
@@ -8,6 +10,8 @@ GHOST_COLORS: Dict[int, Tuple[int, int, int, int]] = {
     2: (128, 255, 255, 255),
     3: (255, 128, 0, 255)
 }
+
+ROOT_DIR = Path(__file__).parent.parent
 
 VULNERABLE_GHOST_COLOR: Tuple[int, int, int, int] = (50, 50, 255, 255)
 WHITE_GHOST_COLOR: Tuple[int, int, int, int] = (255, 255, 255, 255)

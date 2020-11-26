@@ -2,10 +2,12 @@
 This is an attempt to recreate the game of Pacman
 """
 
-import sys
-import pygame as pg
-from src.main import main
 import argparse
+import sys
+
+import pygame as pg
+
+from src.main import main
 
 
 def parse_args():

@@ -42,6 +42,7 @@ class Game(object):
                 "width": pg.display.Info().current_w if not state_active else (pg.display.Info().current_w // 2) - 24
             }
         self.score = 0
+        self.total_rewards = 0
         self.mode_timer = 0
         self.ghosts_timer = 0
         self.value_to_draw = 0
@@ -49,12 +50,15 @@ class Game(object):
         self.sounds_active = sounds_active
         self.state_active = state_active
         self.maze = maze
-        self.maze.build_tile_map()
 
         self.is_run = True
         self.is_game_run = False
         self.pause = False
         self.draw_value = False
+
+        self.player = Pacman()
+        self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, self.maze.get_number_of_ghosts())]
+        self.path_finder = PathFinder(self.maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE))
 
         if self.sounds_active:
             self.init_mixer()
@@ -62,10 +66,7 @@ class Game(object):
 
         if self.screen is not None:
             self.load_assets()
-
-        self.player = Pacman()
-        self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, self.maze.get_number_of_ghosts())]
-        self.path_finder = PathFinder(self.maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE))
+            self.maze.build_tile_map()
 
     def load_assets(self):
         self.screen_bg = get_image_surface(os.path.join(sys.path[0], 'res', 'backgrounds', '1.gif'))
@@ -76,6 +77,10 @@ class Game(object):
         self.img_game_over = get_image_surface(os.path.join(sys.path[0], "res", "text", "gameover.gif"))
         self.img_ready = get_image_surface(os.path.join(sys.path[0], "res", "text", "ready.gif"))
         self.img_life = get_image_surface(os.path.join(sys.path[0], "res", "text", "life.gif"))
+        self.player.load_frames()
+        for ghost in self.ghosts:
+            ghost.anim = Ghost.load_ghost_animation(ghost.ghost_color)
+            ghost.load_assets()
 
     def load_sounds(self):
         self.snd_intro = pg.mixer.Sound(os.path.join(sys.path[0], "res", "sounds", "levelintro.wav"))
@@ -155,7 +160,7 @@ class Game(object):
 
     def quit_game(self):
         pg.quit()
-        sys.exit()
+        sys.exit(0)
 
     def move_players(self):
         player_th = threading.Thread(target=self.player.move, args=(self,))
@@ -209,6 +214,9 @@ class Game(object):
 
     def add_score(self, score_to_add: int):
         self.score += score_to_add
+
+    def add_reward(self, reward_to_add: int):
+        self.total_rewards += reward_to_add
 
     def set_proper_bkg_music(self):
         if self.game_mode == GameMode.ready:
@@ -274,7 +282,7 @@ class Game(object):
 
             self.move_ghosts()
 
-            if self.maze.get_number_of_pellets():
+            if self.maze.get_number_of_pellets() == 0:
                 self.set_mode(GameMode.wait_after_finishing_level)
             elif self.are_all_ghosts_vulnerable():
                 self.set_mode(GameMode.change_ghosts)
@@ -345,6 +353,7 @@ class Game(object):
                             self.snd_pellet[self.pellet_snd_num].play()
                         self.pellet_snd_num = 1 - self.pellet_snd_num
                         self.add_score(10)
+                        self.add_reward(1)
 
                         if self.maze.get_number_of_pellets() == 0:
                             self.set_mode(6)
@@ -355,6 +364,7 @@ class Game(object):
                         if self.sounds_active:
                             self.snd_power_pellet.play()
                         self.add_score(100)
+                        self.add_reward(2)
                         self.make_ghosts_vulnerable()
                     elif self.maze.map_matrix[row][col] == 11:
                         # ran into a horizontal door
@@ -382,8 +392,10 @@ class Game(object):
             if check_if_hit(self.player.x, self.player.y, ghost.x, ghost.y, TILE_SIZE // 2):
                 if ghost.state == GhostState.normal:
                     self.set_mode(GameMode.hit_ghost)
+                    self.add_reward(-5)
                 elif ghost.state == GhostState.vulnerable:
                     self.add_score(ghost.value)
+                    self.add_reward(5)
                     self.draw_ghost_value(ghost.value)
                     self.duplicate_vulnerable_ghosts_value()
                     if self.sounds_active:

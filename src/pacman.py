@@ -19,6 +19,8 @@ class Pacman(object):
 
         self.nearest_row = 0
         self.nearest_col = 0
+        self.home_x = 0
+        self.home_y = 0
 
         self.anim_frame = 1
         self.anim_l = {}
@@ -26,7 +28,6 @@ class Pacman(object):
         self.anim_u = {}
         self.anim_d = {}
         self.anim_s = {}
-        self.load_frames()
         self.current_anim = self.anim_s
 
         self.pellet_snd_num = 0
@@ -44,10 +45,18 @@ class Pacman(object):
             self.anim_s[i] = pg.image.load(os.path.join(sys.path[0], "res", "sprite", "pacman.gif")).convert()
 
     def init_home(self, home_x: int, home_y: int):
-        self.x = home_x * TILE_SIZE
-        self.y = home_y * TILE_SIZE
-        self.nearest_row = home_y
-        self.nearest_col = home_x
+        if self.home_x == 0 and self.home_y == 0:
+            self.home_x, self.home_y = home_x, home_y
+
+        self.x = self.home_x * TILE_SIZE
+        self.y = self.home_y * TILE_SIZE
+        self.nearest_row = self.home_y
+        self.nearest_col = self.home_x
+
+    def regenerate(self):
+        self.lives = 3
+        self.init_home(0, 0)
+        self.set_vel_to_zero()
 
     def move(self, game):
         self.nearest_row = int(((self.y + TILE_SIZE / 2) / TILE_SIZE))
@@ -126,6 +135,20 @@ class Pacman(object):
     def set_vel_to_zero(self):
         self.vel_x = 0
         self.vel_y = 0
+
+    def change_player_speed(self, action):
+        if action.LEFT:
+            self.vel_x = -self.speed
+            self.vel_y = 0
+        elif action.RIGHT:
+            self.vel_x = self.speed
+            self.vel_y = 0
+        elif action.UP:
+            self.vel_y = -self.speed
+            self.vel_x = 0
+        elif action.DOWN:
+            self.vel_y = self.speed
+            self.vel_x = 0
 
     def print_position(self):
         print(f"Pacman col: {self.nearest_col}, row: {self.nearest_row}")

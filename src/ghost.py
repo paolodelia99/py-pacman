@@ -36,11 +36,9 @@ class Ghost(object):
         self.current_path = None
         self.ghost_color = ghost_color
 
-        self.anim = Ghost.load_ghost_animation(self.ghost_color)
-
+        self.anim = {}
         self.anim_fram = 1
         self.anim_delay = 0
-        self.load_assets()
 
     @staticmethod
     def load_ghost_animation(color):

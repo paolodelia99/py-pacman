@@ -1,5 +1,5 @@
 import os
-from typing import Union
+from typing import Union, Tuple
 
 import pygame as pg
 
@@ -58,6 +58,9 @@ class Pacman(object):
         self.lives = 3
         self.init_home(0, 0)
         self.set_vel_to_zero()
+
+    def get_position(self) -> Tuple[int, int]:
+        return self.nearest_col, self.nearest_row
 
     def move(self, game):
         self.nearest_row = int(((self.y + TILE_SIZE / 2) / TILE_SIZE))

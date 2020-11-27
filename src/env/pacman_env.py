@@ -91,18 +91,20 @@ class PacmanEnv(gym.Env):
         :param action:
         :return:
         """
-        prev_position: Tuple[int, int] = (self.game.player.nearest_col, self.game.player.nearest_row)
+        prev_position: Tuple[int, int] = self.get_player_position()
+        prev_score: int = self.game.score
         action = Action(int(action)) if type(action) is int else action
         rewards = self.act(action)
         done = self.get_mode() == GameMode.game_over or self.get_mode() == GameMode.black_screen
         obs = self.get_state_matrix()
         info = {
             'win': self.get_mode() == GameMode.black_screen,
-            'prev_position': prev_position,
+            'prev position': prev_position,
             'player position': self.get_player_position(),
             'player pixel position': self.get_player_pixel_position(),
             'player lives': self.game.player.lives,
             'game mode': self.get_mode().value,
+            'game prev score': prev_score,
             'game score': self.game.score
         }
         return obs, rewards, done, info
@@ -164,7 +166,7 @@ class PacmanEnv(gym.Env):
 
         if mode is GameMode.hit_ghost:
             self.game.player.lives -= 1
-            if self.game.player.lives == -1:
+            if self.game.player.lives == 0:
                 self.game.set_mode(GameMode.game_over)
             else:
                 self.game.init_players_in_map()
@@ -181,5 +183,8 @@ class PacmanEnv(gym.Env):
                 self.game.set_mode(GameMode.change_ghosts)
             elif self.game.are_all_ghosts_normal():
                 self.game.set_mode(GameMode.normal)
+        elif mode == GameMode.normal:
+            if self.maze.get_number_of_pellets() == 0:
+                self.game.set_mode(GameMode.black_screen)
 
         self.game.check_ghosts_state()

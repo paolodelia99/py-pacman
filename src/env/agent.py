@@ -2,12 +2,13 @@ from abc import ABC, abstractmethod
 
 
 class Agent(ABC):
+    name = 'agent'
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         pass
 
     @abstractmethod
-    def act(self, **kwargs):
+    def act(self, state, **kwargs):
         pass
 
     @abstractmethod

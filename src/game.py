@@ -10,6 +10,7 @@ from pygame.surface import SurfaceType
 from src.pacman import Pacman
 from .constants import GHOST_COLORS, TILE_SIZE, SCORE_COLWIDTH, MODES_TO_ZERO, PATH_FINDER_LOOKUP_TABLE, MOVE_MODES, \
     ROOT_DIR
+from .env.agent import Agent
 from .ghost import Ghost
 from .map import Map
 from .utils.action import Action
@@ -20,6 +21,7 @@ from .utils.path_finder import PathFinder
 
 
 class Game(object):
+    ai_agent: Agent
     channel_background: pg.mixer.Channel
     clock: pg.time.Clock
     snd_intro: SoundType
@@ -36,7 +38,16 @@ class Game(object):
     img_ready: SurfaceType
     img_life: SurfaceType
 
-    def __init__(self, maze: Map, screen: Union[pg.SurfaceType, Any], sounds_active: bool, state_active: bool):
+    def __init__(self, maze: Map, screen: Union[pg.SurfaceType, Any], sounds_active: bool, state_active: bool,
+                 **kwargs):
+        """
+
+        :param maze:
+        :param screen:
+        :param sounds_active:
+        :param state_active:
+        """
+        self.ai_agent = kwargs['agent']
         self.screen = screen
         if self.screen is not None:
             self.screen_size = {
@@ -149,8 +160,14 @@ class Game(object):
             self.clock.tick(60)
 
     def event_loop(self):
-        action = Game.check_keyboard_inputs()
-        self.player.change_player_vel(action, self)
+        if self.game_mode in MOVE_MODES:
+            if self.ai_agent is None:
+                action = Game.check_keyboard_inputs()
+            else:
+                action = self.ai_agent.act(self.player.get_position())
+
+            self.player.change_player_vel(int(action), self)
+
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.quit_game()

@@ -14,16 +14,32 @@ from src.utils.game_mode import GameMode
 
 
 class PacmanEnv(gym.Env):
+    """
+    Reinforcement Learning Environment wrapper for the game.
+    It encapsulates an environment with arbitrary behind-the-scenes dynamics.
+    An environment can be partially or fully observed.
+
+    The main API methods that users of this class need to know are:
+
+        step
+        reset
+        render
+        close
+        seed
+
+    Its extends the gym.Env class
+    """
     metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 30}
     reward_range = (-10, 5)
 
     def __init__(self, layout: str, frame_to_skip: int, enable_render=True, state_active=False):
         """
+        PacmanEnv constructor
 
-        :param layout:
-        :param frame_to_skip:
-        :param enable_render:
-        :param state_active:
+        :param layout: the layout of the game
+        :param frame_to_skip: the frame to skip during training
+        :param enable_render: enabling the display of the game screen
+        :param state_active: enabling the display of the state matrix
         """
         self.layout = layout
         self.state_active = state_active
@@ -31,14 +47,15 @@ class PacmanEnv(gym.Env):
         if enable_render:
             pg.init()
         self.frame_to_skip = frame_to_skip
-        self.action_space = spaces.Discrete(5)
+        self.action_space = spaces.Discrete(Action.__len__())
         self.maze = Map(layout)
         self.width, self.height = self.maze.get_map_sizes()
         self.game = Game(
             maze=self.maze,
             screen=Controller.get_screen(state_active, self.width, self.height) if enable_render else None,
             sounds_active=False,
-            state_active=state_active
+            state_active=state_active,
+            agent=None
         )
         self.timer = 0
         self.reinit_game = False
@@ -50,6 +67,12 @@ class PacmanEnv(gym.Env):
             pg.quit()
 
     def seed(self, seed=None):
+        """
+        Sets the seed for this env's random number generator(s).
+
+        :param seed:
+        :return:
+        """
         _, seed = seeding.np_random(seed)
         return [seed]
 
@@ -64,10 +87,27 @@ class PacmanEnv(gym.Env):
         self.game.set_mode(GameMode.normal)
 
     def render(self, mode='human'):
+        """
+        Renders the environment.
+
+        The set of supported modes varies per environment. (And some
+        environments do not support rendering at all.) By convention,
+        if mode is:
+
+        - human: render to the current display or terminal and
+          return nothing. Usually for human consumption.
+        - rgb_array: Return an numpy.ndarray with shape (x, y, 3),
+          representing RGB values for an x-by-y pixel image, suitable
+          for turning into a video.
+
+        :param mode: the mode to render
+        :return: the rba_array if the anonymous mode is active
+        """
         if mode == 'human':
-            self.game.init_screen()
-            self.game.draw()
-            pg.display.flip()
+            if self.enable_render:
+                self.game.init_screen()
+                self.game.draw()
+                pg.display.flip()
         elif mode == 'rgb_array':
             return pg.surfarray.array3d(self.game.screen)
 
@@ -87,9 +127,14 @@ class PacmanEnv(gym.Env):
 
     def step(self, action: Union[Action, int]):
         """
+        Run the 'frame_to_skip' timestep of the environment's dynamics. When end of
+        episode is reached, you are responsible for calling `reset()`
+        to reset this environment's state.
 
-        :param action:
-        :return:
+        Accepts an action and returns a tuple (observation, reward, done, info).
+
+        :param action: action to perform in the environment
+        :return: a tuple containing the following: observation, reward, done, info
         """
         prev_position: Tuple[int, int] = self.get_player_position()
         prev_score: int = self.game.score
@@ -111,7 +156,7 @@ class PacmanEnv(gym.Env):
 
     def _one_step_action(self, action: Union[Action, int]):
         """
-        Performs only one step of the given action in the enviroment
+        Performs only one step of the given action in the environment
 
         :param action: action to perform
         :return: the reward obtained after performing the action
@@ -164,6 +209,10 @@ class PacmanEnv(gym.Env):
     def check_game_mode(self):
         mode = self.get_mode()
 
+        if self.maze.get_number_of_pellets() == 0:
+            self.game.set_mode(GameMode.black_screen)
+            return
+
         if mode is GameMode.hit_ghost:
             self.game.player.lives -= 1
             if self.game.player.lives == 0:
@@ -183,8 +232,5 @@ class PacmanEnv(gym.Env):
                 self.game.set_mode(GameMode.change_ghosts)
             elif self.game.are_all_ghosts_normal():
                 self.game.set_mode(GameMode.normal)
-        elif mode == GameMode.normal:
-            if self.maze.get_number_of_pellets() == 0:
-                self.game.set_mode(GameMode.black_screen)
 
         self.game.check_ghosts_state()

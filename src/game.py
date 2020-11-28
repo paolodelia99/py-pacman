@@ -164,9 +164,10 @@ class Game(object):
             if self.ai_agent is None:
                 action = Game.check_keyboard_inputs()
             else:
-                action = self.ai_agent.act(self.player.get_position())
+                action = self.ai_agent.act(state=self.player.get_position(), matrix=self.maze.state_matrix)
 
-            self.player.change_player_vel(int(action), self)
+            if action is not None:
+                self.player.change_player_vel(action, self)
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -188,8 +189,6 @@ class Game(object):
             return Action.UP
         elif pg.key.get_pressed()[pg.K_DOWN]:
             return Action.DOWN
-        else:
-            return Action.NONE
 
     def quit_game(self):
         pg.quit()

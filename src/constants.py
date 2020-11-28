@@ -71,45 +71,53 @@ TILE_LOOKUP_TABLE: Dict[int, str] = {
     50: 'blank.gif'
 }
 
+# State Lookup table constants
+BLANK_SPACE_VALUE: int = -1
+WALL_VALUE: int = -10
+GHOST_VALUE: int = -15
+PELLET_VALUE: int = 1
+POWER_PELLET_VALUE: int = 2
+
+
 STATE_LOOKUP_TABLE: Dict[int, int] = {
-    10: 0,
-    11: 0,
-    12: 0,
-    13: -10,
-    14: 1,
-    15: 2,
-    16: -10,
-    17: -10,
-    18: -10,
-    19: -10,
-    20: -10,
-    21: -10,
-    22: -10,
-    23: -10,
-    24: -10,
-    25: -10,
-    26: -10,
-    27: -10,
-    28: -10,
-    29: -10,
-    30: -10,
-    31: -10,
-    32: -10,
-    33: -5,
-    34: -5,
-    35: -5,
-    36: -5,
-    40: 0,
-    50: 0
+    10: BLANK_SPACE_VALUE,
+    11: BLANK_SPACE_VALUE,
+    12: BLANK_SPACE_VALUE,
+    13: WALL_VALUE,
+    14: PELLET_VALUE,
+    15: POWER_PELLET_VALUE,
+    16: WALL_VALUE,
+    17: WALL_VALUE,
+    18: WALL_VALUE,
+    19: WALL_VALUE,
+    20: WALL_VALUE,
+    21: WALL_VALUE,
+    22: WALL_VALUE,
+    23: WALL_VALUE,
+    24: WALL_VALUE,
+    25: WALL_VALUE,
+    26: WALL_VALUE,
+    27: WALL_VALUE,
+    28: WALL_VALUE,
+    29: WALL_VALUE,
+    30: WALL_VALUE,
+    31: WALL_VALUE,
+    32: WALL_VALUE,
+    33: GHOST_VALUE,
+    34: GHOST_VALUE,
+    35: GHOST_VALUE,
+    36: GHOST_VALUE,
+    40: BLANK_SPACE_VALUE,
+    50: BLANK_SPACE_VALUE
 }
 
 STATE_COLOR_LOOKUP_TABLE: Dict[int, Tuple[int, int, int]] = {
-    0: (255, 204, 204),
-    1: (255, 102, 102),
-    2: (255, 0, 0),
+    BLANK_SPACE_VALUE: (255, 204, 204),
+    PELLET_VALUE: (255, 102, 102),
+    POWER_PELLET_VALUE: (255, 0, 0),
     5: (153, 0, 0),
-    -10: (0, 0, 255),
-    -5: (51, 51, 255)
+    WALL_VALUE: (0, 0, 255),
+    GHOST_VALUE: (51, 51, 255)
 }
 
 PATH_FINDER_LOOKUP_TABLE: Dict[int, int] = {

@@ -1,11 +1,10 @@
 import os
-import sys
 from typing import Optional
 
 import pygame as pg
 from pygame.surface import SurfaceType
 
-from src.constants import TILE_SIZE, VULNERABLE_GHOST_COLOR, WHITE_GHOST_COLOR
+from src.constants import TILE_SIZE, VULNERABLE_GHOST_COLOR, WHITE_GHOST_COLOR, ROOT_DIR
 from src.pacman import Pacman
 from src.utils.functions import get_image_surface
 from src.utils.game_mode import GameMode
@@ -36,11 +35,9 @@ class Ghost(object):
         self.current_path = None
         self.ghost_color = ghost_color
 
-        self.anim = Ghost.load_ghost_animation(self.ghost_color)
-
+        self.anim = {}
         self.anim_fram = 1
         self.anim_delay = 0
-        self.load_assets()
 
     @staticmethod
     def load_ghost_animation(color):
@@ -48,7 +45,7 @@ class Ghost(object):
 
         for i in range(1, 7):
             anim[i] = pg.image.load(
-                os.path.join(sys.path[0], "res", "sprite", "ghost " + str(i) + ".gif")).convert()
+                os.path.join(ROOT_DIR, "res", "sprite", "ghost " + str(i) + ".gif")).convert()
 
             # change the ghost color in this frame
             for y in range(0, TILE_SIZE):
@@ -61,7 +58,7 @@ class Ghost(object):
         return anim
 
     def load_assets(self):
-        self.img_glasses = get_image_surface(os.path.join(sys.path[0], "res", "tiles", "glasses.gif"))
+        self.img_glasses = get_image_surface(os.path.join(ROOT_DIR, "res", "tiles", "glasses.gif"))
 
     def draw(self, screen, game, player: Pacman):
 

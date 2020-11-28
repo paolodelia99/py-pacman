@@ -1,10 +1,21 @@
 # PyPacman
 
-The classic game of Pacman built with Pygame.
+![language](https://img.shields.io/badge/language-python-blue)
+![license](https://img.shields.io/badge/license-MIT-orange)
+
+The classic game of Pacman built with Pygame, provided also with a Reinforcement Learning environment. 
 
 ![example](res/pacman-example.gif)
 
+# Table of Contents
+
+- [Quick Start](#quick-start)
+    - [Game](#game)
+    - [RL Enviroment](#rl-environment)
+
 # Quick Start
+
+## Game
 
 Install the requirements
     
@@ -30,13 +41,80 @@ Run the game with others option
                             Name of layout to load in the game
       -snd, --sound         Activate sounds in the game
       -stt, --state         Display the state matrix of the game
+      
+## RL Environment
+
+The `PacmanEnv` class extends the `gym.Env` class, so if you already know how to
+use the **open ai gym**, the api is the same. 
+
+Here's a little example: 
+
+```python
+from src.env.pacman_env import PacmanEnv
+
+env = PacmanEnv( 
+    layout=layout_to_use,
+    frame_to_skip=10,
+    enable_render=True,
+    state_active=True
+)
+
+for episode in range(episodes):
+    env.reset()
+    for i in range(max_steps):
+        action = env.action_space.sample()
+        obs, rewards, done, info = env.step(action)
+        
+        if done: 
+            break
+```
+
+### Agent class 
+
+The `src.env` folder provides also an abstract class that you can use to make your own AI agent.
+You can use it to make your own agent, train it and directly plug into the game and see 
+how will perform.
+
+Here's how you can use it:
+
+```python
+from src.env.agent import Agent
+
+class MyAgent(Agent):
+    name = 'my_agent'
+
+    def __init__(self):
+        pass
+
+    def act(self, state, **kwargs):
+    """
+    The code that return the action to take
+    """
+        pass
+    
+    def train(self, **kwargs):
+    """
+    Your code to train the agent
+    """
+        pass
+
+```
+
+And after you're done with the training you can simply plug it into the game:
+
+```python
+def run_agent(layout: str):
+    agent = MyAgent(layout=layout)
+    controller = Controller(layout_name=layout, act_sound=True, act_state=True, ai_agent=agent)
+    controller.load_menu()
+```
         
 # Todos
 
 - [ ] implement fruit
 - [ ] flashing power pellet
 - [x] state matrix in another screen
-- [ ] Provide an RL Environment so an AI agent can be trained
+- [x] Provide an RL Environment so an AI agent can be trained
 
 # License
 

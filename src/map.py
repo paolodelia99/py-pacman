@@ -15,7 +15,8 @@ from .constants import STATE_LOOKUP_TABLE, \
     WHITE_EDGE_LIGHT_COLOR, \
     WHITE_EDGE_SHADOW_COLOR, \
     WHITE_FILL_COLOR, \
-    STATE_COLOR_LOOKUP_TABLE
+    STATE_COLOR_LOOKUP_TABLE, \
+    ROOT_DIR
 from .utils.functions import get_image_surface
 from .utils.ghost_state import GhostState
 
@@ -23,7 +24,7 @@ from .utils.ghost_state import GhostState
 class Map:
 
     def __init__(self, layout_name):
-        self.map_matrix = np.loadtxt(os.path.join(sys.path[0], 'res', 'layouts', layout_name + '.lay')).astype(int)
+        self.map_matrix = np.loadtxt(os.path.join(ROOT_DIR, 'res', 'layouts', layout_name + '.lay')).astype(int)
         self.shape = self.map_matrix.shape
         self.edge_light_color = (0, 0, 255, 255)
         self.edge_shadow_color = (0, 0, 255, 255)
@@ -53,15 +54,16 @@ class Map:
     def is_pill(self, x: int, y: int) -> bool:
         return self.map_matrix[x:int, y:int] == 15
 
-    def remove_biscuit(self, x: int, y: int):
+    def remove_biscuit(self, x: int, y: int, is_screen_active: bool = True):
         self.map_matrix[x][y] = 10
-        self.state_matrix[x][y] = 0
-        self.tile_map[x, y] = get_image_surface(os.path.join(
-            sys.path[0],
-            "res",
-            "tiles",
-            TILE_LOOKUP_TABLE[self.map_matrix[x][y]]
-        ))
+        self.state_matrix[x][y] = -1
+        if is_screen_active:
+            self.tile_map[x, y] = get_image_surface(os.path.join(
+                ROOT_DIR,
+                "res",
+                "tiles",
+                TILE_LOOKUP_TABLE[self.map_matrix[x][y]]
+            ))
 
     def get_player_home(self) -> Tuple[int, int]:
         home_y, home_x = np.where(self.map_matrix == 40)
@@ -99,10 +101,10 @@ class Map:
                 if self.map_matrix[i][j] in [40, 11, 12, 33, 34, 35, 36]:
                     # position of pacman, the ghost or the doors
                     self.tile_map[i, j] = get_image_surface(
-                        os.path.join(sys.path[0], "res", "tiles", TILE_LOOKUP_TABLE[10]))
+                        os.path.join(ROOT_DIR, "res", "tiles", TILE_LOOKUP_TABLE[10]))
                 else:
                     self.tile_map[i, j] = get_image_surface(os.path.join(
-                        sys.path[0],
+                        ROOT_DIR,
                         "res",
                         "tiles",
                         TILE_LOOKUP_TABLE[self.map_matrix[i][j]]
@@ -155,7 +157,7 @@ class Map:
         return ghosts_home
 
     def reinit_map(self):
-        self.map_matrix = np.loadtxt(os.path.join('res', 'layouts', self.layout_name + '.lay')).astype(int)
+        self.map_matrix = np.loadtxt(os.path.join(ROOT_DIR, 'res', 'layouts', self.layout_name + '.lay')).astype(int)
         self.state_matrix = self.matrix_from_lookup_table(STATE_LOOKUP_TABLE)
         self.build_tile_map()
 
@@ -178,7 +180,7 @@ class Map:
 
     def update_ghosts_position(self, ghosts: List):
 
-        self.state_matrix[self.state_matrix == -5] = -99999
+        self.state_matrix[self.state_matrix == -15] = -99999
         self.state_matrix[self.state_matrix == 5] = -99999
 
         a = np.where(self.state_matrix == -99999)
@@ -191,6 +193,6 @@ class Map:
             if ghost.state == GhostState.vulnerable or ghost.state == GhostState.spectacles:
                 self.state_matrix[ghost.nearest_row][ghost.nearest_col] = 5
             else:
-                self.state_matrix[ghost.nearest_row][ghost.nearest_col] = -5
+                self.state_matrix[ghost.nearest_row][ghost.nearest_col] = -15 # fixme: sometimes an error is raised, don't know why
             if ghost.nearest_row != ghost.home_y and ghost.nearest_col != ghost.home_x:
-                self.state_matrix[ghost.home_y][ghost.home_x] = 0
+                self.state_matrix[ghost.home_y][ghost.home_x] = -1

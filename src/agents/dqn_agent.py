@@ -1,11 +1,10 @@
 """
-An example of how to make the ai agent work
+An example of how to make the dnq ai agent work
 """
 
 import argparse
 import pickle
 import random
-from collections import defaultdict
 
 import numpy as np
 

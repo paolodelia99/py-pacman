@@ -165,6 +165,7 @@ class Game(object):
                 action = Game.check_keyboard_inputs()
             else:
                 action = self.ai_agent.act(state=self.player.get_position(), matrix=self.maze.state_matrix)
+                action = int(action)
 
             if action is not None:
                 self.player.change_player_vel(action, self)

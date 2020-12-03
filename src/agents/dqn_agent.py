@@ -1,16 +1,71 @@
 """
 An example of how to make the dnq ai agent work
 """
-
 import argparse
-import pickle
 import random
+from collections import deque
+from functools import partial
 
+import flax
+import jax
 import numpy as np
+from flax import nn, optim
+from jax import numpy as jnp, random, jit, vmap
 
 from src.controller import Controller
 from src.env.agent import Agent
 from src.env.pacman_env import PacmanEnv
+
+
+def flat_non_zero(a):
+    return jnp.nonzero(jnp.ravel(a))[0]
+
+
+def rand(key, num_actions):
+    return jax.random.randint(key, (1,), 0, num_actions)[0]
+
+
+def rand_argmax(a):
+    return np.random.choice(jnp.nonzero(jnp.ravel(a == jnp.max(a)))[0])
+
+
+class ReplayBuffer(object):
+
+    def __init__(self, capacity):
+        self.buffer = deque(maxlen=capacity)
+
+    def push(self, state, action, reward, next_state, done):
+        state = jnp.expand_dims(state, 0)
+        next_state = jnp.expand_dims(next_state, 0)
+
+        self.buffer.append((state, action, reward, next_state, done))
+
+    def sample(self, batch_size):
+        state, action, reward, next_state, done = zip(*random.sample(self.buffer, batch_size))
+        return {
+            'sample': jnp.concatenate(state),
+            'action': jnp.asarray(action),
+            'reward': jnp.asarray(reward),
+            'next_state': jnp.concatenate(next_state),
+            'done': jnp.asarray(done)
+        }
+
+    def __len__(self):
+        return len(self.buffer)
+
+
+class DQN(flax.nn.Module):
+    """DQN network."""
+
+    def apply(self, x, num_actions):
+        x = flax.nn.Dense(x, features=418)
+        x = flax.nn.relu(x)
+        x = flax.nn.Dense(x, features=64)
+        x = flax.nn.relu(x)
+        x = flax.nn.Dense(x, features=64)
+        x = flax.nn.relu(x)
+        x = flax.nn.Dense(x, features=num_actions)
+        return x
 
 
 class DNQAgent(Agent):
@@ -28,151 +83,106 @@ class DNQAgent(Agent):
     def act(self, state, **kwargs):
         pass
 
+    @jit
+    def policy(self, key, x, model, epsilon, num_actions):
+        prob = jax.random.uniform(key)
+        q = jnp.squeeze(model(jnp.expand_dims(x, axis=0)))
+        rnd = partial(rand, num_actions=num_actions)
+        a = jax.lax.cond(prob < epsilon, key, rnd, q, jnp.argmax)
+        return a
+
+    @vmap
+    def q_learning_loss(self, q, target_q, action, action_select, reward, done, gamma=0.9):
+        td_target = reward + gamma * (1. - done) * target_q[action_select]
+        td_error = jax.lax.stop_gradient(td_target) - q[action]
+        return td_error ** 2
+
+    @jit
+    def train_step(self, optimizer, target_model, batch):
+        def loss_fn(model):
+            q = model(batch['state'])
+            done = batch['done']
+            target_q = target_model(batch['next_state'])
+            action_select = model(batch['next_state']).argmax(-1)
+            return jnp.mean(self.q_learning_loss(q, target_q, batch['action'], action_select,
+                                            batch['reward'], batch['done']))
+
+        loss, grad = jax.value_and_grad(loss_fn)(optimizer.target)
+        optimizer = optimizer.apply_gradient(grad)
+        return optimizer, loss
+
     def save_model(self):
         pass
 
     def load_model(self):
         pass
 
-    def train(self, q_func, optimizer_spec, batch_size,  **kwargs):
-
+    def train(self,
+              n_episodes,
+              num_steps,
+              batch_size,
+              replay_size,
+              target_update_frequency,
+              gamma=0.9,
+              **kwargs):
         env = PacmanEnv(
             layout=self.layout,
-            frame_to_skip=10,
-            enable_render=True
+            frame_to_skip=10
         )
-        gamma = 0.99
-        learning_starts = 50000
-        learning_freq = 4
-        target_update_freq = 10000
-        stopping_criterion = None
+        replay_buffer = ReplayBuffer(replay_size)
+        key = jax.random.PRNGKey(0)
         num_actions = env.action_space.n
-        input_arg = env.observation_space.shape[0]
+        state = env.reset()
+        module = DQN.partial(num_actions=num_actions)
+        _, initial_params = module.init(key, jnp.expand_dims(state, axis=0))
+        model = nn.Model(module, initial_params)
+        target_model = nn.Model(module, initial_params)
+        optimizer = optim.Adam(1e-3).create(model)
+        epsilon = 1.0
+        epsilon_min = 0.1
+        epsilon_decay_rate = 0.9999999
 
+        # stats
+        ep_losses = []
+        ep_returns = []
 
-        # Initialize target q function and q function
-        Q = q_func(input_arg, num_actions).type(dtype)
-        target_Q = q_func(input_arg, num_actions).type(dtype)
+        for episode in range(n_episodes):
+            state = env.reset()
 
-        # Construct Q network optimizer function
-        optimizer = optimizer_spec.constructor(Q.parameters(), **optimizer_spec.kwargs)
+            ep_return = 0.
+            loss = 0
 
-        # Construct the replay buffer
-        replay_buffer = ReplayBuffer(replay_buffer_size, frame_history_len)
+            for t in range(num_steps):
+                action = self.policy(key, state, optimizer.target, epsilon, num_actions)
 
-        ###############
-        # RUN ENV     #
-        ###############
-        num_param_updates = 0
-        mean_episode_reward = -float('nan')
-        best_mean_episode_reward = -float('inf')
-        last_obs = env.reset()
-        LOG_EVERY_N_STEPS = 10000
+                next_state, reward, done, _ = env.step(int(action))
 
-        for t in count():
-            ### Check stopping criterion
-            if stopping_criterion is not None and stopping_criterion(env):
-                break
+                replay_buffer.push(next_state, action, reward, state, done)
+                ep_return += reward
 
-            ### Step the env and store the transition
-            # Store lastest observation in replay memory and last_idx can be used to store action, reward, done
-            last_idx = replay_buffer.store_frame(last_obs)
-            # encode_recent_observation will take the latest observation
-            # that you pushed into the buffer and compute the corresponding
-            # input that should be given to a Q network by appending some
-            # previous frames.
-            recent_observations = replay_buffer.encode_recent_observation()
+                if len(replay_buffer) > batch_size:
+                    batch = replay_buffer.sample(batch_size)
+                    optimizer, loss = self.train_step(optimizer, target_model, batch)
+                    ep_losses.append(float(loss))
 
-            # Choose random action if not yet start learning
-            if t > learning_starts:
-                action = select_epilson_greedy_action(Q, recent_observations, t)[0, 0]
-            else:
-                action = random.randrange(num_actions)
-            # Advance one step
-            obs, reward, done, _ = env.step(action)
-            # clip rewards between -1 and 1
-            reward = max(-1.0, min(reward, 1.0))
-            # Store other info in replay memory
-            replay_buffer.store_effect(last_idx, action, reward, done)
-            # Resets the environment when reaching an episode boundary.
-            if done:
-                obs = env.reset()
-            last_obs = obs
+                if t % target_update_frequency == 0:
+                    target_model = target_model.replace(params=optimizer.target.params)
 
-            ### Perform experience replay and train the network.
-            # Note that this is only done if the replay buffer contains enough samples
-            # for us to learn something useful -- until then, the model will not be
-            # initialized and random actions should be taken
-            if (t > learning_starts and
-                    t % learning_freq == 0 and
-                    replay_buffer.can_sample(batch_size)):
-                # Use the replay buffer to sample a batch of transitions
-                # Note: done_mask[i] is 1 if the next state corresponds to the end of an episode,
-                # in which case there is no Q-value at the next state; at the end of an
-                # episode, only the current state reward contributes to the target
-                obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = replay_buffer.sample(batch_size)
-                # Convert numpy nd_array to torch variables for calculation
-                obs_batch = Variable(torch.from_numpy(obs_batch).type(dtype) / 255.0)
-                act_batch = Variable(torch.from_numpy(act_batch).long())
-                rew_batch = Variable(torch.from_numpy(rew_batch))
-                next_obs_batch = Variable(torch.from_numpy(next_obs_batch).type(dtype) / 255.0)
-                not_done_mask = Variable(torch.from_numpy(1 - done_mask)).type(dtype)
+                if done:
+                    break
 
-                if USE_CUDA:
-                    act_batch = act_batch.cuda()
-                    rew_batch = rew_batch.cuda()
+                state = next_state
 
-                # Compute current Q value, q_func takes only state and output value for every state-action pair
-                # We choose Q based on action taken.
-                current_Q_values = Q(obs_batch).gather(1, act_batch.unsqueeze(1))
-                # Compute next Q value based on which action gives max Q values
-                # Detach variable from the current graph since we don't want gradients for next Q to propagated
-                next_max_q = target_Q(next_obs_batch).detach().max(1)[0]
-                next_Q_values = not_done_mask * next_max_q
-                # Compute the target of the current Q values
-                target_Q_values = rew_batch + (gamma * next_Q_values)
-                # Compute Bellman error
-                bellman_error = target_Q_values - current_Q_values
-                # clip the bellman error between [-1 , 1]
-                clipped_bellman_error = bellman_error.clamp(-1, 1)
-                # Note: clipped_bellman_delta * -1 will be right gradient
-                d_error = clipped_bellman_error * -1.0
-                # Clear previous gradients before backward pass
-                optimizer.zero_grad()
-                # run backward pass
-                current_Q_values.backward(d_error.data.unsqueeze(1))
+                if epsilon >= epsilon_min:
+                    epsilon *= epsilon_decay_rate
 
-                # Perfom the update
-                optimizer.step()
-                num_param_updates += 1
+            ep_returns.append(ep_return)
 
-                # Periodically update the target network by Q network to target Q network
-                if num_param_updates % target_update_freq == 0:
-                    target_Q.load_state_dict(Q.state_dict())
+            print("Episode #{}, Return {}, Loss {}".format(episode, ep_return, loss))
 
-            ### 4. Log progress and keep track of statistics
-            episode_rewards = get_wrapper_by_name(env, "Monitor").get_episode_rewards()
-            if len(episode_rewards) > 0:
-                mean_episode_reward = np.mean(episode_rewards[-100:])
-            if len(episode_rewards) > 100:
-                best_mean_episode_reward = max(best_mean_episode_reward, mean_episode_reward)
+        env.close()
 
-            Statistic["mean_episode_rewards"].append(mean_episode_reward)
-            Statistic["best_mean_episode_rewards"].append(best_mean_episode_reward)
-
-            if t % LOG_EVERY_N_STEPS == 0 and t > learning_starts:
-                print("Timestep %d" % (t,))
-                print("mean reward (100 episodes) %f" % mean_episode_reward)
-                print("best mean reward %f" % best_mean_episode_reward)
-                print("episodes %d" % len(episode_rewards))
-                print("exploration %f" % exploration.value(t))
-                sys.stdout.flush()
-
-                # Dump statistics to pickle
-                with open('statistics.pkl', 'wb') as f:
-                    pickle.dump(Statistic, f)
-                    print("Saved to %s" % 'statistics.pkl')
-
+        return optimizer.target
 
 
 def train_agent(layout: str):

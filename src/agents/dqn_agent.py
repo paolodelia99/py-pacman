@@ -2,15 +2,17 @@
 An example of how to make the dnq ai agent work
 """
 import argparse
-import random
+import pickle
 from collections import deque
 from functools import partial
 
 import flax
 import jax
 import numpy as np
-from flax import nn, optim
+from flax import nn, optim, serialization
 from jax import numpy as jnp, random, jit, vmap
+
+import random
 
 from src.controller import Controller
 from src.env.agent import Agent
@@ -29,6 +31,36 @@ def rand_argmax(a):
     return np.random.choice(jnp.nonzero(jnp.ravel(a == jnp.max(a)))[0])
 
 
+@jit
+def policy(model, key, x, epsilon, num_actions):
+    prob = jax.random.uniform(key)
+    q = model(x)
+    rnd = partial(rand, num_actions=num_actions)
+    a = jax.lax.cond(prob < epsilon, key, rnd, q, jnp.argmax)
+    return a
+
+
+@vmap
+def q_learning_loss(q, target_q, action, action_select, reward, done, gamma=0.9):
+    td_target = reward + gamma * (1. - done) * target_q[action_select]
+    td_error = jax.lax.stop_gradient(td_target) - q[action]
+    return td_error ** 2
+
+
+@jit
+def train_step(optimizer, target_model, batch):
+    def loss_fn(model):
+        q = model(batch['state'])
+        target_q = target_model(batch['next_state'])
+        action_select = model(batch['next_state']).argmax(-1)
+        return jnp.mean(q_learning_loss(q, target_q, batch['action'], action_select,
+                                        batch['reward'], batch['done']))
+
+    loss, grad = jax.value_and_grad(loss_fn)(optimizer.target)
+    optimizer = optimizer.apply_gradient(grad)
+    return optimizer, loss
+
+
 class ReplayBuffer(object):
 
     def __init__(self, capacity):
@@ -43,7 +75,7 @@ class ReplayBuffer(object):
     def sample(self, batch_size):
         state, action, reward, next_state, done = zip(*random.sample(self.buffer, batch_size))
         return {
-            'sample': jnp.concatenate(state),
+            'state': jnp.concatenate(state),
             'action': jnp.asarray(action),
             'reward': jnp.asarray(reward),
             'next_state': jnp.concatenate(next_state),
@@ -83,39 +115,14 @@ class DNQAgent(Agent):
     def act(self, state, **kwargs):
         pass
 
-    @jit
-    def policy(self, key, x, model, epsilon, num_actions):
-        prob = jax.random.uniform(key)
-        q = jnp.squeeze(model(jnp.expand_dims(x, axis=0)))
-        rnd = partial(rand, num_actions=num_actions)
-        a = jax.lax.cond(prob < epsilon, key, rnd, q, jnp.argmax)
-        return a
-
-    @vmap
-    def q_learning_loss(self, q, target_q, action, action_select, reward, done, gamma=0.9):
-        td_target = reward + gamma * (1. - done) * target_q[action_select]
-        td_error = jax.lax.stop_gradient(td_target) - q[action]
-        return td_error ** 2
-
-    @jit
-    def train_step(self, optimizer, target_model, batch):
-        def loss_fn(model):
-            q = model(batch['state'])
-            done = batch['done']
-            target_q = target_model(batch['next_state'])
-            action_select = model(batch['next_state']).argmax(-1)
-            return jnp.mean(self.q_learning_loss(q, target_q, batch['action'], action_select,
-                                            batch['reward'], batch['done']))
-
-        loss, grad = jax.value_and_grad(loss_fn)(optimizer.target)
-        optimizer = optimizer.apply_gradient(grad)
-        return optimizer, loss
-
-    def save_model(self):
-        pass
+    def save_model(self, model):
+        serialization.to_state_dict(model)
+        with open(self.filename, 'wb') as handle:
+            pickle.dump(model, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            handle.close()
 
     def load_model(self):
-        pass
+        return serialization.from_bytes(self.filename)
 
     def train(self,
               n_episodes,
@@ -134,35 +141,41 @@ class DNQAgent(Agent):
         num_actions = env.action_space.n
         state = env.reset()
         module = DQN.partial(num_actions=num_actions)
-        _, initial_params = module.init(key, jnp.expand_dims(state, axis=0))
+        _, initial_params = module.init(key, state.flatten())
         model = nn.Model(module, initial_params)
         target_model = nn.Model(module, initial_params)
         optimizer = optim.Adam(1e-3).create(model)
         epsilon = 1.0
-        epsilon_min = 0.1
-        epsilon_decay_rate = 0.9999999
+        epsilon_final = 0.05
+        epsilon_decay = 500
+
+        epsilon_by_frame = lambda frame_idx: epsilon_final + (epsilon - epsilon_final) * jnp.exp(
+            -1. * frame_idx / epsilon_decay)
 
         # stats
         ep_losses = []
         ep_returns = []
 
         for episode in range(n_episodes):
-            state = env.reset()
-
+            state = env.reset().flatten()
+            epsilon = epsilon_by_frame(episode)
             ep_return = 0.
             loss = 0
 
             for t in range(num_steps):
-                action = self.policy(key, state, optimizer.target, epsilon, num_actions)
+                key, _ = jax.random.split(key)
+                env.render()
+                action = policy(optimizer.target, key, state, epsilon, num_actions)
 
                 next_state, reward, done, _ = env.step(int(action))
+                next_state = next_state.flatten()
 
                 replay_buffer.push(next_state, action, reward, state, done)
                 ep_return += reward
 
                 if len(replay_buffer) > batch_size:
                     batch = replay_buffer.sample(batch_size)
-                    optimizer, loss = self.train_step(optimizer, target_model, batch)
+                    optimizer, loss = train_step(optimizer, target_model, batch)
                     ep_losses.append(float(loss))
 
                 if t % target_update_frequency == 0:
@@ -173,22 +186,25 @@ class DNQAgent(Agent):
 
                 state = next_state
 
-                if epsilon >= epsilon_min:
-                    epsilon *= epsilon_decay_rate
-
             ep_returns.append(ep_return)
 
             print("Episode #{}, Return {}, Loss {}".format(episode, ep_return, loss))
 
         env.close()
 
-        return optimizer.target
+        self.save_model(model)
 
 
 def train_agent(layout: str):
     agent = DNQAgent(layout=layout, version='1')
 
-    agent.train()
+    agent.train(
+        n_episodes=1000,
+        num_steps=100000,
+        batch_size=32,
+        replay_size=100,
+        target_update_frequency=10
+    )
 
 
 def run_agent(layout: str):

@@ -1,5 +1,4 @@
 import os
-import sys
 from typing import Tuple, List, Dict
 
 import numpy as np

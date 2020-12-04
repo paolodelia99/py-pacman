@@ -19,16 +19,8 @@ from src.env.agent import Agent
 from src.env.pacman_env import PacmanEnv
 
 
-def flat_non_zero(a):
-    return jnp.nonzero(jnp.ravel(a))[0]
-
-
 def rand(key, num_actions):
     return jax.random.randint(key, (1,), 0, num_actions)[0]
-
-
-def rand_argmax(a):
-    return np.random.choice(jnp.nonzero(jnp.ravel(a == jnp.max(a)))[0])
 
 
 @jit
@@ -101,6 +93,7 @@ class DQN(flax.nn.Module):
 
 
 class DNQAgent(Agent):
+    model: nn.Model
     name = 'dnq_agent'
 
     def __init__(self, **kwargs):
@@ -116,13 +109,17 @@ class DNQAgent(Agent):
         pass
 
     def save_model(self, model):
-        serialization.to_state_dict(model)
+        params = serialization.to_state_dict(model)['target']
         with open(self.filename, 'wb') as handle:
-            pickle.dump(model, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(params, handle, protocol=pickle.HIGHEST_PROTOCOL)
             handle.close()
 
-    def load_model(self):
-        return serialization.from_bytes(self.filename)
+    def load_model(self, num_actions):
+        with open(self.filename, 'rb') as handle:
+            params = pickle.load(handle)
+            handle.close()
+
+        self.model = nn.Model(DQN.partial(num_actions=num_actions), params)
 
     def train(self,
               n_episodes,
@@ -146,7 +143,7 @@ class DNQAgent(Agent):
         target_model = nn.Model(module, initial_params)
         optimizer = optim.Adam(1e-3).create(model)
         epsilon = 1.0
-        epsilon_final = 0.05
+        epsilon_final = 0.1
         epsilon_decay = 500
 
         epsilon_by_frame = lambda frame_idx: epsilon_final + (epsilon - epsilon_final) * jnp.exp(
@@ -192,14 +189,14 @@ class DNQAgent(Agent):
 
         env.close()
 
-        self.save_model(model)
+        self.save_model(optimizer.state_dict())
 
 
-def train_agent(layout: str):
+def train_agent(layout: str, episodes: int = 1000):
     agent = DNQAgent(layout=layout, version='1')
 
     agent.train(
-        n_episodes=1000,
+        n_episodes=episodes,
         num_steps=100000,
         batch_size=32,
         replay_size=100,
@@ -209,6 +206,7 @@ def train_agent(layout: str):
 
 def run_agent(layout: str):
     agent = DNQAgent(layout=layout, version='1')
+    agent.load_model(4)
     controller = Controller(layout_name=layout, act_sound=True, act_state=True, ai_agent=agent)
     controller.load_menu()
 
@@ -219,6 +217,8 @@ def parse_args():
                         help="Name of layout to load in the game")
     parser.add_argument('-t', '--train', action='store_true',
                         help='Train the agent')
+    parser.add_argument('-e', '--episodes', type=int, nargs=1,
+                        help="The number of episode to use during training")
     parser.add_argument('-r', '--run', action='store_true',
                         help='run the trained agent')
 
@@ -229,9 +229,10 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     layout = args.layout[0]
+    episodes = args.episodes[0] if args.episodes else 1000
 
     if args.train:
-        train_agent(layout)
+        train_agent(layout, episodes)
 
     if args.run:
         run_agent(layout)

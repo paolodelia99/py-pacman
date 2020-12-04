@@ -196,14 +196,9 @@ class Game(object):
         sys.exit(0)
 
     def move_players(self):
-        player_th = threading.Thread(target=self.player.move, args=(self,))
-        ghosts_th = threading.Thread(target=self.move_ghosts)
+        self.player.move(self)
+        self.move_ghosts()
 
-        player_th.start()
-        ghosts_th.start()
-
-        player_th.join()
-        ghosts_th.join()
         self.update_ghosts_position_in_map()
 
     def move_ghosts(self):

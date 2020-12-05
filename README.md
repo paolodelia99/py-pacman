@@ -50,14 +50,9 @@ use the **open ai gym**, the api is the same.
 Here's a little example: 
 
 ```python
-from src.env.pacman_env import PacmanEnv
+import gym
 
-env = PacmanEnv( 
-    layout=layout_to_use,
-    frame_to_skip=10,
-    enable_render=True,
-    state_active=True
-)
+env = gym.make('pacman-v0', layout=self.layout, frame_to_skip=10)
 
 for episode in range(episodes):
     env.reset()
@@ -108,7 +103,9 @@ def run_agent(layout: str):
     controller = Controller(layout_name=layout, act_sound=True, act_state=True, ai_agent=agent)
     controller.load_menu()
 ```
-        
+
+For more examples check out the [`examples`](./examples) folder.
+
 # Todos
 
 - [ ] implement fruit

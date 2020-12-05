@@ -182,9 +182,9 @@ class Ghost(object):
         self.follow_next_path()
 
     def set_normal(self):
-        if self.state == GhostState.vulnerable:
-            self.state = GhostState.normal
-            self.value = 0
+        self.state = GhostState.normal
+        self.value = 0
+        self.speed = 2
 
     def duplicate_value(self):
         self.value *= 2
@@ -205,7 +205,7 @@ class Ghost(object):
     def set_spectacles(self, path_finder: PathFinder, player: Pacman):
         self.state = GhostState.spectacles
         self.value = 0
-        self.speed = self.speed * 4
+        self.speed = 8
         self.x = self.nearest_col * TILE_SIZE
         self.y = self.nearest_row * TILE_SIZE
         self.find_path(path_finder, player)
@@ -237,7 +237,7 @@ class Ghost(object):
             and self.nearest_col == self.respawn_x \
                 and self.state == GhostState.spectacles:
             self.state = GhostState.normal
-            self.speed = self.speed / 4
+            self.speed = 2
             self.find_path(path_finder, player)
 
     def print_position(self):

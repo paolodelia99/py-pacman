@@ -85,6 +85,8 @@ class PacmanEnv(gym.Env):
         self.game.player.regenerate()
         self.game.score = 0
         self.game.set_mode(GameMode.normal)
+        self.game.make_ghosts_normal()
+        return self.get_state_matrix()
 
     def render(self, mode='human'):
         """

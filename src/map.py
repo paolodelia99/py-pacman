@@ -1,5 +1,4 @@
 import os
-import sys
 from typing import Tuple, List, Dict
 
 import numpy as np
@@ -177,6 +176,9 @@ class Map:
         self.edge_shadow_color = (0, 0, 255, 255)
         self.fill_color = (0, 0, 0, 255)
         self.build_tile_map()
+
+    def get_state_matrix(self) -> np.ndarray:
+        return self.state_matrix
 
     def update_ghosts_position(self, ghosts: List):
 

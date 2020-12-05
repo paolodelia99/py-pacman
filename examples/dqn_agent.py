@@ -16,6 +16,7 @@ from src.controller import Controller
 from src.env.agent import Agent
 import random
 
+
 def rand(key, num_actions):
     return jax.random.randint(key, (1,), 0, num_actions)[0]
 
@@ -126,7 +127,7 @@ class DNQAgent(Agent):
               gamma=0.9,
               frame_to_skip: int = 10,
               **kwargs):
-        env = gym.make('pacman-v0', layout=self.layout, frame_to_skip=frame_to_skip, enable_render=False)
+        env = gym.make('pacman-v0', layout=self.layout, frame_to_skip=frame_to_skip)
         replay_buffer = ReplayBuffer(replay_size)
         key = jax.random.PRNGKey(0)
         num_actions = env.action_space.n
@@ -231,7 +232,7 @@ if __name__ == '__main__':
 
     if args.train:
         frames_to_skip = args.frames_to_skip if args.frames_to_skip is not None else 10
-        train_agent(layout, episodes, frames_to_skip=args.frames_to_skip)
+        train_agent(layout, episodes, frames_to_skip=frames_to_skip)
 
     if args.run:
         run_agent(layout)

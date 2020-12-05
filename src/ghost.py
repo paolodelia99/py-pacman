@@ -182,9 +182,9 @@ class Ghost(object):
         self.follow_next_path()
 
     def set_normal(self):
-        if self.state == GhostState.vulnerable:
-            self.state = GhostState.normal
-            self.value = 0
+        self.state = GhostState.normal
+        self.value = 0
+        self.speed = 2
 
     def duplicate_value(self):
         self.value *= 2

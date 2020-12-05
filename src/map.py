@@ -177,6 +177,9 @@ class Map:
         self.fill_color = (0, 0, 0, 255)
         self.build_tile_map()
 
+    def get_state_matrix(self) -> np.ndarray:
+        return self.state_matrix
+
     def update_ghosts_position(self, ghosts: List):
 
         self.state_matrix[self.state_matrix == -15] = -99999

@@ -164,7 +164,7 @@ class Game(object):
             if self.ai_agent is None:
                 action = Game.check_keyboard_inputs()
             else:
-                action = self.ai_agent.act(state=self.player.get_position(), matrix=self.maze.state_matrix)
+                action = self.ai_agent.act(state=self.player.get_position(), matrix=self.maze.get_state_matrix())
                 action = int(action)
 
             if action is not None:

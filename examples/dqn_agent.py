@@ -5,19 +5,16 @@ import argparse
 import pickle
 from collections import deque
 from functools import partial
+from typing import Sequence
 
-import flax
+import gym
 import jax
-import numpy as np
 from flax import nn, optim, serialization
 from jax import numpy as jnp, random, jit, vmap
 
-import random
-
 from src.controller import Controller
 from src.env.agent import Agent
-from src.env.pacman_env import PacmanEnv
-
+import random
 
 def rand(key, num_actions):
     return jax.random.randint(key, (1,), 0, num_actions)[0]
@@ -78,17 +75,16 @@ class ReplayBuffer(object):
         return len(self.buffer)
 
 
-class DQN(flax.nn.Module):
+class DQN(nn.Module):
     """DQN network."""
+    features: Sequence[int]
 
     def apply(self, x, num_actions):
-        x = flax.nn.Dense(x, features=418)
-        x = flax.nn.relu(x)
-        x = flax.nn.Dense(x, features=64)
-        x = flax.nn.relu(x)
-        x = flax.nn.Dense(x, features=64)
-        x = flax.nn.relu(x)
-        x = flax.nn.Dense(x, features=num_actions)
+        x = nn.Dense(x, features=133)
+        x = nn.relu(x)
+        x = nn.Dense(x, features=64)
+        x = nn.relu(x)
+        x = nn.Dense(x, features=num_actions)
         return x
 
 
@@ -106,7 +102,7 @@ class DNQAgent(Agent):
             self.filename = ''.join([self.name, '_', self.layout, '_', self.version, '.pkl'])
 
     def act(self, state, **kwargs):
-        pass
+        return jnp.argmax(self.model(kwargs['matrix'].flatten()))
 
     def save_model(self, model):
         params = serialization.to_state_dict(model)['target']
@@ -119,7 +115,7 @@ class DNQAgent(Agent):
             params = pickle.load(handle)
             handle.close()
 
-        self.model = nn.Model(DQN.partial(num_actions=num_actions), params)
+        self.model = nn.Model(DQN.partial(num_actions=num_actions), params['params'])
 
     def train(self,
               n_episodes,
@@ -128,11 +124,9 @@ class DNQAgent(Agent):
               replay_size,
               target_update_frequency,
               gamma=0.9,
+              frame_to_skip: int = 10,
               **kwargs):
-        env = PacmanEnv(
-            layout=self.layout,
-            frame_to_skip=10
-        )
+        env = gym.make('pacman-v0', layout=self.layout, frame_to_skip=frame_to_skip, enable_render=False)
         replay_buffer = ReplayBuffer(replay_size)
         key = jax.random.PRNGKey(0)
         num_actions = env.action_space.n
@@ -143,7 +137,7 @@ class DNQAgent(Agent):
         target_model = nn.Model(module, initial_params)
         optimizer = optim.Adam(1e-3).create(model)
         epsilon = 1.0
-        epsilon_final = 0.1
+        epsilon_final = 0.05
         epsilon_decay = 500
 
         epsilon_by_frame = lambda frame_idx: epsilon_final + (epsilon - epsilon_final) * jnp.exp(
@@ -192,7 +186,7 @@ class DNQAgent(Agent):
         self.save_model(optimizer.state_dict())
 
 
-def train_agent(layout: str, episodes: int = 1000):
+def train_agent(layout: str, episodes: int = 1000, **kwargs):
     agent = DNQAgent(layout=layout, version='1')
 
     agent.train(
@@ -200,14 +194,15 @@ def train_agent(layout: str, episodes: int = 1000):
         num_steps=100000,
         batch_size=32,
         replay_size=100,
-        target_update_frequency=10
+        target_update_frequency=10,
+        frame_to_skip=kwargs['frames_to_skip']
     )
 
 
 def run_agent(layout: str):
     agent = DNQAgent(layout=layout, version='1')
     agent.load_model(4)
-    controller = Controller(layout_name=layout, act_sound=True, act_state=True, ai_agent=agent)
+    controller = Controller(layout_name=layout, act_sound=False, act_state=True, ai_agent=agent)
     controller.load_menu()
 
 
@@ -219,6 +214,9 @@ def parse_args():
                         help='Train the agent')
     parser.add_argument('-e', '--episodes', type=int, nargs=1,
                         help="The number of episode to use during training")
+    parser.add_argument('-frs', '--frames_to_skip', type=int, nargs=1,
+                        help="The number of frames to skip during training, so the agent doesn't have to take "
+                             "an action a every frame")
     parser.add_argument('-r', '--run', action='store_true',
                         help='run the trained agent')
 
@@ -232,7 +230,8 @@ if __name__ == '__main__':
     episodes = args.episodes[0] if args.episodes else 1000
 
     if args.train:
-        train_agent(layout, episodes)
+        frames_to_skip = args.frames_to_skip if args.frames_to_skip is not None else 10
+        train_agent(layout, episodes, frames_to_skip=args.frames_to_skip)
 
     if args.run:
         run_agent(layout)

@@ -11,7 +11,7 @@ import numpy as np
 
 from src.controller import Controller
 from src.env.agent import Agent
-from src.env.pacman_env import PacmanEnv
+import gym
 
 
 class QAgent(Agent):
@@ -62,12 +62,7 @@ class QAgent(Agent):
         epsilon_min = 0.1
         epsilon_decay_rate = 0.9999999
         max_steps = 60
-        env = PacmanEnv(
-            layout=self.layout,
-            frame_to_skip=10,
-            enable_render=True,
-            state_active=True
-        )
+        env = gym.make('pacman-v0', layout=self.layout, frame_to_skip=10)
         q_table = defaultdict(lambda: np.zeros(env.action_space.n))
         state = QAgent.get_state(env.game.maze.get_player_home(), env.get_state_matrix())
 

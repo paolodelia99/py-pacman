@@ -89,6 +89,12 @@ class DQN(nn.Module):
         return x
 
 
+def build_up_state(state, player_position):
+    x, y = player_position
+    state[y][x] = 2
+    return state.flatten()
+
+
 class DNQAgent(Agent):
     model: nn.Model
     name = 'dnq_agent'
@@ -127,19 +133,19 @@ class DNQAgent(Agent):
               gamma=0.9,
               frame_to_skip: int = 10,
               **kwargs):
-        env = gym.make('pacman-v0', layout=self.layout, frame_to_skip=frame_to_skip)
+        env = gym.make('pacman-v0', layout=self.layout, frame_to_skip=frame_to_skip, player_lives=1)
         replay_buffer = ReplayBuffer(replay_size)
         key = jax.random.PRNGKey(0)
         num_actions = env.action_space.n
         state = env.reset()
         module = DQN.partial(num_actions=num_actions)
-        _, initial_params = module.init(key, state.flatten())
+        _, initial_params = module.init(key, build_up_state(state, env.get_player_position()))
         model = nn.Model(module, initial_params)
         target_model = nn.Model(module, initial_params)
         optimizer = optim.Adam(1e-3).create(model)
         epsilon = 1.0
-        epsilon_final = 0.05
-        epsilon_decay = 500
+        epsilon_final = 0.1
+        epsilon_decay = 10000
 
         epsilon_by_frame = lambda frame_idx: epsilon_final + (epsilon - epsilon_final) * jnp.exp(
             -1. * frame_idx / epsilon_decay)
@@ -149,7 +155,8 @@ class DNQAgent(Agent):
         ep_returns = []
 
         for episode in range(n_episodes):
-            state = env.reset().flatten()
+            state = env.reset()
+            state = build_up_state(state, env.get_player_position())
             epsilon = epsilon_by_frame(episode)
             ep_return = 0.
             loss = 0
@@ -159,8 +166,11 @@ class DNQAgent(Agent):
                 env.render()
                 action = policy(optimizer.target, key, state, epsilon, num_actions)
 
-                next_state, reward, done, _ = env.step(int(action))
-                next_state = next_state.flatten()
+                next_state, reward, done, info = env.step(action=int(action))
+                next_state = build_up_state(next_state, info['player position'])
+
+                if jnp.array_equal(state, next_state) and reward == 0:
+                    reward -= 1
 
                 replay_buffer.push(next_state, action, reward, state, done)
                 ep_return += reward
@@ -182,6 +192,9 @@ class DNQAgent(Agent):
 
             print("Episode #{}, Return {}, Loss {}".format(episode, ep_return, loss))
 
+            if episode % 10000 == 0:
+                self.save_model(optimizer.state_dict())
+
         env.close()
 
         self.save_model(optimizer.state_dict())
@@ -193,8 +206,8 @@ def train_agent(layout: str, episodes: int = 1000, **kwargs):
     agent.train(
         n_episodes=episodes,
         num_steps=100000,
-        batch_size=32,
-        replay_size=100,
+        batch_size=64,
+        replay_size=200,
         target_update_frequency=10,
         frame_to_skip=kwargs['frames_to_skip']
     )

@@ -141,5 +141,8 @@ class Pacman(object):
                 self.vel_y = self.speed
                 self.vel_x = 0
 
+    def set_lives(self, lives):
+        self.lives = lives
+
     def print_position(self):
         print(f"Pacman col: {self.nearest_col}, row: {self.nearest_row}")

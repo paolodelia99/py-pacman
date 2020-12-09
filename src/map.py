@@ -15,7 +15,7 @@ from .constants import STATE_LOOKUP_TABLE, \
     WHITE_EDGE_SHADOW_COLOR, \
     WHITE_FILL_COLOR, \
     STATE_COLOR_LOOKUP_TABLE, \
-    ROOT_DIR
+    ROOT_DIR, GHOST_VALUE
 from .utils.functions import get_image_surface
 from .utils.ghost_state import GhostState
 
@@ -40,12 +40,12 @@ class Map:
             return True
 
         if 0 <= row < self.shape[0] and 0 <= col < self.shape[1]:
-            return self.state_matrix[row][col] == -10
+            return self.map_matrix[row][col] in range(16, 33)
         else:
             return False
 
     def is_ghost(self, x: int, y: int) -> bool:
-        return self.state_matrix[x:int, y:int] == -5
+        return self.state_matrix[x:int, y:int] == -1
 
     def is_biscuit(self, x: int, y: int) -> bool:
         return self.state_matrix[x:int, y:int] == 1
@@ -55,7 +55,7 @@ class Map:
 
     def remove_biscuit(self, x: int, y: int, is_screen_active: bool = True):
         self.map_matrix[x][y] = 10
-        self.state_matrix[x][y] = -1
+        self.state_matrix[x][y] = 0
         if is_screen_active:
             self.tile_map[x, y] = get_image_surface(os.path.join(
                 ROOT_DIR,
@@ -182,8 +182,7 @@ class Map:
 
     def update_ghosts_position(self, ghosts: List):
 
-        self.state_matrix[self.state_matrix == -15] = -99999
-        self.state_matrix[self.state_matrix == 5] = -99999
+        self.state_matrix[self.state_matrix == -1] = -99999
 
         a = np.where(self.state_matrix == -99999)
         pos = [(x, y) for x, y in zip(a[1], a[0])]
@@ -193,8 +192,8 @@ class Map:
 
         for ghost in ghosts:
             if ghost.state == GhostState.vulnerable or ghost.state == GhostState.spectacles:
-                self.state_matrix[ghost.nearest_row][ghost.nearest_col] = 5
+                self.state_matrix[ghost.nearest_row][ghost.nearest_col] = GHOST_VALUE
             else:
-                self.state_matrix[ghost.nearest_row][ghost.nearest_col] = -15 # fixme: sometimes an error is raised, don't know why
+                self.state_matrix[ghost.nearest_row][ghost.nearest_col] = GHOST_VALUE
             if ghost.nearest_row != ghost.home_y and ghost.nearest_col != ghost.home_x:
-                self.state_matrix[ghost.home_y][ghost.home_x] = -1
+                self.state_matrix[ghost.home_y][ghost.home_x] = 0

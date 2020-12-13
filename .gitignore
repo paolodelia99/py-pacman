@@ -10,3 +10,4 @@ try_env.py
 
 # models
 *.pkl
+*.pth

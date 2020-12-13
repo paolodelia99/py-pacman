@@ -91,7 +91,7 @@ class PacmanEnv(gym.Env):
         if mode == 'human':
             return self.get_state_matrix()
         elif mode == 'rgb_array':
-            return self.get_rgb_array()
+            return self.get_screen_rgb_array()
 
     def render(self, mode='human'):
         """
@@ -116,7 +116,7 @@ class PacmanEnv(gym.Env):
                 self.game.draw()
                 pg.display.flip()
         elif mode == 'rgb_array':
-            return self.get_rgb_array()
+            return self.get_screen_rgb_array()
 
     def close(self):
         self.__del__()
@@ -132,7 +132,7 @@ class PacmanEnv(gym.Env):
         """
         return sum(self._one_step_action(action) for _ in range(self.frame_to_skip))
 
-    def step(self, action: Union[Action, int], mode='human'):
+    def step(self, action: Union[Action, int]):
         """
         Run the 'frame_to_skip' timestep of the environment's dynamics. When end of
         episode is reached, you are responsible for calling `reset()`
@@ -141,7 +141,6 @@ class PacmanEnv(gym.Env):
         Accepts an action and returns a tuple (observation, reward, done, info).
 
         :param action: action to perform in the environment
-        :param mode: the rendering mode
         :return: a tuple containing the following: observation, reward, done, info
         """
         prev_position: Tuple[int, int] = self.get_player_position()
@@ -149,7 +148,7 @@ class PacmanEnv(gym.Env):
         action = Action(int(action)) if type(action) is int else action
         rewards = self.act(action)
         done = self.get_mode() == GameMode.game_over or self.get_mode() == GameMode.black_screen
-        obs = self.get_state_matrix() if mode == 'human' else self.get_rgb_array()
+        obs = self.get_screen_rgb_array()
         info = {
             'win': self.get_mode() == GameMode.black_screen,
             'prev position': prev_position,
@@ -158,7 +157,8 @@ class PacmanEnv(gym.Env):
             'player lives': self.game.player.lives,
             'game mode': self.get_mode().value,
             'game prev score': prev_score,
-            'game score': self.game.score
+            'game score': self.game.score,
+            'state matrix': self.get_state_matrix()
         }
         return obs, rewards, done, info
 
@@ -243,5 +243,6 @@ class PacmanEnv(gym.Env):
 
         self.game.check_ghosts_state()
 
-    def get_rgb_array(self):
-        return pg.surfarray.pixels3d(self.game.screen)
+    def get_screen_rgb_array(self):
+        screen = self.game.screen.copy()
+        return pg.surfarray.pixels3d(screen)

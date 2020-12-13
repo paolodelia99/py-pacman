@@ -62,6 +62,9 @@ class Pacman(object):
     def get_position(self) -> Tuple[int, int]:
         return self.nearest_col, self.nearest_row
 
+    def get_pixel_pos(self) -> Tuple[int, int]:
+        return self.x, self.y
+
     def move(self, game):
         self.nearest_row = int(((self.y + TILE_SIZE / 2) / TILE_SIZE))
         self.nearest_col = int(((self.x + TILE_SIZE / 2) / TILE_SIZE))

@@ -164,7 +164,11 @@ class Game(object):
             if self.ai_agent is None:
                 action = Game.check_keyboard_inputs()
             else:
-                action = self.ai_agent.act(state=self.player.get_position(), matrix=self.maze.get_state_matrix())
+                action = self.ai_agent.act(
+                    player_pos=self.player.get_position(),
+                    player_pixel_pos=self.player.get_pixel_pos(),
+                    matrix=self.maze.get_state_matrix(),
+                    screen=pg.surfarray.pixels3d(self.screen.copy()))
                 action = int(action)
 
             if action is not None:

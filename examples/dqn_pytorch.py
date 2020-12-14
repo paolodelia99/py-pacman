@@ -106,13 +106,12 @@ def get_screen(screen, player_position):
     return resize(screen).unsqueeze(0).to(device)
 
 
-def select_action(state, eps_end, eps_start, eps_decay, policy_net, n_actions):
+def select_action(state, epsilon, policy_net, n_actions):
     global steps_done
-    sample = random.random()
-    eps_threshold = eps_end + (eps_start - eps_end) * \
-                    math.exp(-1. * steps_done / eps_decay)
+    sample = np.random.uniform()
+
     steps_done += 1
-    if sample > eps_threshold:
+    if sample > epsilon:
         with torch.no_grad():
             # t.max(1) will return largest column value of each row.
             # second column on max result is index of where max element was
@@ -182,7 +181,8 @@ class DNQAgent(Agent):
 
     def act(self, *args, **kwargs):
         screen = get_screen(screen=kwargs['screen'], player_position=kwargs['player_pixel_pos'])
-        return torch.argmax(self.model(screen))
+        print(self.model(screen))
+        return self.model(screen).max(1)[1].view(1, 1).item()
 
     def save_model(self, model):
         torch.save(model.state_dict(), self.filename)
@@ -203,11 +203,14 @@ class DNQAgent(Agent):
               frame_to_skip: int = 10,
               **kwargs):
         GAMMA = gamma
-        EPS_START = 10
-        EPS_END = 0.05
-        EPS_DECAY = 1000
+        EPSILON = 1.0
+        EPS_END = 0.1
+        EPS_DECAY = 2000
         TARGET_UPDATE = target_update_frequency
         BATCH_SIZE = batch_size
+
+        epsilon_by_frame = lambda frame_idx: EPS_END + (EPSILON - EPS_END) * math.exp(
+            -1. * frame_idx / EPS_DECAY)
 
         # Get screen size so that we can initialize layers correctly based on shape
         # returned from AI gym. Typical dimensions at this point are close to 3x40x90
@@ -237,10 +240,18 @@ class DNQAgent(Agent):
             last_screen = get_screen(screen, player_position)
             current_screen = get_screen(screen, player_position)
             state = current_screen - last_screen
+            ep_reward = 0.
+            EPSILON = epsilon_by_frame(i_episode)
+
             for t in count():
                 # Select and perform an action
-                action = select_action(state, EPS_END, EPS_START, EPS_DECAY, policy_net, n_actions)
+                env.render(mode='human')
+                action = select_action(state, EPSILON, policy_net, n_actions)
                 obs, reward, done, info = env.step(action.item())
+                if info['player pixel position'] == info['prev player pixel position']:
+                    reward -= 1
+                ep_reward += reward
+
                 reward = torch.tensor([reward], device=device)
 
                 # Observe new state
@@ -260,7 +271,7 @@ class DNQAgent(Agent):
                 # Perform one step of the optimization (on the target network)
                 optimize_model(memory, BATCH_SIZE, policy_net, optimizer, target_net, GAMMA)
                 if done:
-                    print("Episode #{}, lasts for {} timestep".format(i_episode, t + 1))
+                    print("Episode #{}, lasts for {} timestep, total reward: {}".format(i_episode, t + 1, ep_reward))
                     break
             # Update the target network, copying all weights and biases in DQN
             if i_episode % TARGET_UPDATE == 0:

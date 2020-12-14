@@ -144,6 +144,7 @@ class PacmanEnv(gym.Env):
         :return: a tuple containing the following: observation, reward, done, info
         """
         prev_position: Tuple[int, int] = self.get_player_position()
+        prev_pixel_position: Tuple[int, int] = self.get_player_pixel_position()
         prev_score: int = self.game.score
         action = Action(int(action)) if type(action) is int else action
         rewards = self.act(action)
@@ -153,6 +154,7 @@ class PacmanEnv(gym.Env):
             'win': self.get_mode() == GameMode.black_screen,
             'prev position': prev_position,
             'player position': self.get_player_position(),
+            'prev player pixel position': prev_pixel_position,
             'player pixel position': self.get_player_pixel_position(),
             'player lives': self.game.player.lives,
             'game mode': self.get_mode().value,

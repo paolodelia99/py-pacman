@@ -37,6 +37,7 @@ class Game(object):
     img_game_over: SurfaceType
     img_ready: SurfaceType
     img_life: SurfaceType
+    prev_screen: SurfaceType
 
     def __init__(self, maze: Map, screen: Union[pg.SurfaceType, Any], sounds_active: bool, state_active: bool,
                  **kwargs):
@@ -168,7 +169,7 @@ class Game(object):
                     player_pos=self.player.get_position(),
                     player_pixel_pos=self.player.get_pixel_pos(),
                     matrix=self.maze.get_state_matrix(),
-                    screen=pg.surfarray.pixels3d(self.screen.copy()))
+                    screen=pg.surfarray.pixels3d(self.prev_screen))
                 action = int(action)
 
             if action is not None:
@@ -222,6 +223,7 @@ class Game(object):
             ghost.draw(self.screen, self, self.player)
 
         draw_maze_th.join()
+        self.prev_screen = self.screen.copy()
 
     def draw_texts(self):
         self.draw_number(self.score, 0, self.maze.shape[0] * TILE_SIZE)

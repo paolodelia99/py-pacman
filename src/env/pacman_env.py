@@ -32,7 +32,7 @@ class PacmanEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 30}
     reward_range = (-10, 5)
 
-    def __init__(self, layout: str, frame_to_skip: int, enable_render=True, state_active=False, player_lives: int = 3):
+    def __init__(self, layout: str, enable_render=True, state_active=False, player_lives: int = 3):
         """
         PacmanEnv constructor
 
@@ -46,7 +46,6 @@ class PacmanEnv(gym.Env):
         self.enable_render = enable_render
         if enable_render:
             pg.init()
-        self.frame_to_skip = frame_to_skip
         self.action_space = spaces.Discrete(Action.__len__())
         self.maze = Map(layout)
         self.width, self.height = self.maze.get_map_sizes()
@@ -121,20 +120,9 @@ class PacmanEnv(gym.Env):
     def close(self):
         self.__del__()
 
-    def act(self, action: Action):
-        """
-        Perform an action on the game. We lockstep frames with actions. If act is not called the game will not run.
-
-        :param action The index of the action we wish to perform
-
-        :returns: Returns the reward that the agent has accumulated while performing the action.
-
-        """
-        return sum(self._one_step_action(action) for _ in range(self.frame_to_skip))
-
     def step(self, action: Union[Action, int]):
         """
-        Run the 'frame_to_skip' timestep of the environment's dynamics. When end of
+        Run one timestep of the environment's dynamics. When end of
         episode is reached, you are responsible for calling `reset()`
         to reset this environment's state.
 
@@ -147,7 +135,7 @@ class PacmanEnv(gym.Env):
         prev_pixel_position: Tuple[int, int] = self.get_player_pixel_position()
         prev_score: int = self.game.score
         action = Action(int(action)) if type(action) is int else action
-        rewards = self.act(action)
+        rewards = self._one_step_action(action)
         done = self.get_mode() == GameMode.game_over or self.get_mode() == GameMode.black_screen
         obs = self.get_screen_rgb_array()
         info = {
@@ -164,7 +152,7 @@ class PacmanEnv(gym.Env):
         }
         return obs, rewards, done, info
 
-    def _one_step_action(self, action: Union[Action, int]):
+    def _one_step_action(self, action: Union[Action, int]) -> int:
         """
         Performs only one step of the given action in the environment
 

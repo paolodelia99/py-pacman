@@ -15,7 +15,7 @@ from .constants import STATE_LOOKUP_TABLE, \
     WHITE_EDGE_SHADOW_COLOR, \
     WHITE_FILL_COLOR, \
     STATE_COLOR_LOOKUP_TABLE, \
-    ROOT_DIR, GHOST_VALUE
+    ROOT_DIR, GHOST_VALUE, GHOST_VULNERABLE_VALUE
 from .utils.functions import get_image_surface
 from .utils.ghost_state import GhostState
 
@@ -182,7 +182,8 @@ class Map:
 
     def update_ghosts_position(self, ghosts: List):
 
-        self.state_matrix[self.state_matrix == -1] = -99999
+        self.state_matrix[self.state_matrix == GHOST_VALUE] = -99999
+        self.state_matrix[self.state_matrix == GHOST_VULNERABLE_VALUE] = -99999
 
         a = np.where(self.state_matrix == -99999)
         pos = [(x, y) for x, y in zip(a[1], a[0])]
@@ -191,9 +192,15 @@ class Map:
             self.state_matrix[y][x] = STATE_LOOKUP_TABLE[self.map_matrix[y][x]]
 
         for ghost in ghosts:
-            if ghost.state == GhostState.vulnerable or ghost.state == GhostState.spectacles:
-                self.state_matrix[ghost.nearest_row][ghost.nearest_col] = GHOST_VALUE
-            else:
-                self.state_matrix[ghost.nearest_row][ghost.nearest_col] = GHOST_VALUE
+            value = GHOST_VULNERABLE_VALUE \
+                if ghost.state == GhostState.vulnerable or ghost.state == GhostState.spectacles \
+                else GHOST_VALUE
+            try:
+                self.state_matrix[ghost.nearest_row][ghost.nearest_col] = value
+            except IndexError:
+                id = ghost.id
+                positions = np.where(self.map_matrix == 33 + id)
+                pos = [(x, y) for x, y in zip(positions[1], positions[0])][0]
+                self.state_matrix[pos[1]][pos[0]] = GHOST_VALUE
             if ghost.nearest_row != ghost.home_y and ghost.nearest_col != ghost.home_x:
                 self.state_matrix[ghost.home_y][ghost.home_x] = 0

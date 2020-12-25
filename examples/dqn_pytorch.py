@@ -166,7 +166,7 @@ def train_agent(layout: str, episodes: int = 10000, frames_to_skip: int = 4):
     GAMMA = 0.99
     EPSILON = 1.0
     EPS_END = 0.1
-    EPS_DECAY = 500
+    EPS_DECAY = 5000000
     TARGET_UPDATE = 10
     BATCH_SIZE = 64
 

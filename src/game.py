@@ -169,7 +169,8 @@ class Game(object):
                     player_pos=self.player.get_position(),
                     player_pixel_pos=self.player.get_pixel_pos(),
                     matrix=self.maze.get_state_matrix(),
-                    screen=pg.surfarray.pixels3d(self.prev_screen))
+                    screen=pg.surfarray.pixels3d(self.prev_screen),
+                    player_action=self.player.current_action)
                 action = int(action)
 
             if action is not None:

@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Any, Dict
 
 import gym
 import numpy as np
@@ -11,7 +11,6 @@ from src.game import Game
 from src.map import Map
 from src.utils.action import Action
 from src.utils.game_mode import GameMode
-from src.utils.ghost_state import GhostState
 
 
 class PacmanEnv(gym.Env):
@@ -85,6 +84,8 @@ class PacmanEnv(gym.Env):
         self.game.restart()
         self.game.player.regenerate()
         self.game.score = 0
+        self.game.mode_timer = 0
+        self.game.ghosts_timer = 0
         self.game.set_mode(GameMode.normal)
         self.game.make_ghosts_normal()
         self.game.player.set_lives(self.player_lives)
@@ -92,6 +93,8 @@ class PacmanEnv(gym.Env):
             return self.get_state_matrix()
         elif mode == 'rgb_array':
             return self.get_screen_rgb_array()
+        elif mode == 'info':
+            return self.get_info_dict()
 
     def render(self, mode='human'):
         """
@@ -132,31 +135,30 @@ class PacmanEnv(gym.Env):
         :param action: action to perform in the environment
         :return: a tuple containing the following: observation, reward, done, info
         """
-        prev_position: Tuple[int, int] = self.get_player_position()
-        prev_pixel_position: Tuple[int, int] = self.get_player_pixel_position()
-        prev_score: int = self.game.score
         action = Action(int(action)) if type(action) is int else action
         rewards = self._one_step_action(action)
-        ghosts_pixel_pos = [ghost.get_pixel_position() for ghost in self.game.ghosts]
-        number_of_scared_ghosts = sum([ghost.state == GhostState.vulnerable for ghost in self.game.ghosts])
         done = self.get_mode() == GameMode.game_over or self.get_mode() == GameMode.black_screen
         obs = self.get_screen_rgb_array()
+        info = self.get_info_dict()
+        return obs, rewards, done, info
+
+    def get_info_dict(self) -> Dict[str, Any]:
+        ghosts_pixel_pos = [ghost.get_pixel_position() for ghost in self.game.ghosts]
+        number_of_scared_ghosts = sum([ghost.is_vulnerable() for ghost in self.game.ghosts])
         info = {
             'win': self.get_mode() == GameMode.black_screen,
-            'prev position': prev_position,
             'player position': self.get_player_position(),
-            'prev player pixel position': prev_pixel_position,
             'player pixel position': self.get_player_pixel_position(),
             'player lives': self.game.player.lives,
             'game mode': self.get_mode().value,
-            'game prev score': prev_score,
             'game score': self.game.score,
             'number of scared ghosts': number_of_scared_ghosts,
             'state matrix': self.get_state_matrix(),
             'ghosts_pixel_pos': ghosts_pixel_pos,
-            'player vel': self.game.player.get_vel()
+            'player vel': self.game.player.get_vel(),
+            'player action': self.game.player.current_action
         }
-        return obs, rewards, done, info
+        return info
 
     def _one_step_action(self, action: Union[Action, int]) -> int:
         """

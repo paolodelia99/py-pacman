@@ -202,6 +202,9 @@ class Ghost(object):
         self.value = 200
         self.speed = 2
 
+    def is_vulnerable(self) -> bool:
+        return self.state == GhostState.vulnerable
+
     def set_spectacles(self, path_finder: PathFinder, player: Pacman):
         self.state = GhostState.spectacles
         self.value = 0

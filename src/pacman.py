@@ -17,6 +17,7 @@ class Pacman(object):
         self.vel_x = 0
         self.vel_y = 0
         self.speed = 3
+        self._current_action = Action.LEFT
 
         self.nearest_row = 0
         self.nearest_col = 0
@@ -152,3 +153,11 @@ class Pacman(object):
 
     def print_position(self):
         print(f"Pacman col: {self.nearest_col}, row: {self.nearest_row}")
+
+    @property
+    def current_action(self) -> Action:
+        return self._current_action
+
+    @current_action.setter
+    def current_action(self, action: Action):
+        self._current_action = action

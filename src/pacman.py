@@ -147,5 +147,8 @@ class Pacman(object):
     def set_lives(self, lives):
         self.lives = lives
 
+    def get_vel(self) -> Tuple[int, int]:
+        return self.vel_x, self.vel_y
+
     def print_position(self):
         print(f"Pacman col: {self.nearest_col}, row: {self.nearest_row}")

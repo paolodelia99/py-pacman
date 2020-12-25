@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional, Tuple
 
 import pygame as pg
 from pygame.surface import SurfaceType
@@ -239,6 +239,18 @@ class Ghost(object):
             self.state = GhostState.normal
             self.speed = 2
             self.find_path(path_finder, player)
+
+    def get_pixel_position(self) -> Tuple[int, int]:
+        """
+        :return: the (x, y) pixel position of the ghost
+        """
+        return self.x, self.y
+
+    def get_position(self) -> Tuple[int, int]:
+        """
+        :return: the (x, y) position of the ghost
+        """
+        return self.nearest_col, self.nearest_row
 
     def print_position(self):
         print(f"Ghost_{self.id} col: {self.nearest_col}, row: {self.nearest_row}")

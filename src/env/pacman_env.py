@@ -11,6 +11,7 @@ from src.game import Game
 from src.map import Map
 from src.utils.action import Action
 from src.utils.game_mode import GameMode
+from src.utils.ghost_state import GhostState
 
 
 class PacmanEnv(gym.Env):
@@ -136,6 +137,8 @@ class PacmanEnv(gym.Env):
         prev_score: int = self.game.score
         action = Action(int(action)) if type(action) is int else action
         rewards = self._one_step_action(action)
+        ghosts_pixel_pos = [ghost.get_pixel_position() for ghost in self.game.ghosts]
+        number_of_scared_ghosts = sum([ghost.state == GhostState.vulnerable for ghost in self.game.ghosts])
         done = self.get_mode() == GameMode.game_over or self.get_mode() == GameMode.black_screen
         obs = self.get_screen_rgb_array()
         info = {
@@ -148,7 +151,10 @@ class PacmanEnv(gym.Env):
             'game mode': self.get_mode().value,
             'game prev score': prev_score,
             'game score': self.game.score,
-            'state matrix': self.get_state_matrix()
+            'number of scared ghosts': number_of_scared_ghosts,
+            'state matrix': self.get_state_matrix(),
+            'ghosts_pixel_pos': ghosts_pixel_pos,
+            'player vel': self.game.player.get_vel()
         }
         return obs, rewards, done, info
 

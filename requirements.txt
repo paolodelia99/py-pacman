@@ -1,11 +1,15 @@
 certifi==2020.6.20
 cycler==0.10.0
 kiwisolver==1.2.0
-numpy==1.19.2
+numpy~=1.19.4
 Pillow==7.2.0
-pygame==2.0.0
+pygame~=2.0.1
 pygame-menu==3.3.0
 pyparsing==2.4.7
 pyperclip==1.8.1
 python-dateutil==2.8.1
 six==1.15.0
+gym~=0.18.0
+torch~=1.7.1+cu110
+torchvision~=0.8.2+cu110
+setuptools~=51.1.0

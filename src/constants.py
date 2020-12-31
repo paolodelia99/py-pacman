@@ -73,7 +73,7 @@ TILE_LOOKUP_TABLE: Dict[int, str] = {
 
 # State Lookup table constants
 BLANK_SPACE_VALUE: int = 0
-WALL_VALUE: int = 0
+WALL_VALUE: int = -1
 GHOST_VALUE: int = -1
 PELLET_VALUE: int = 1
 POWER_PELLET_VALUE: int = 1

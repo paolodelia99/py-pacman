@@ -71,8 +71,8 @@ class Game(object):
         self.draw_value = False
 
         self.player = Pacman()
-        self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, self.maze.get_number_of_ghosts())]
         self.path_finder = PathFinder(self.maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE))
+        self.ghosts = [Ghost(i, GHOST_COLORS[i], self.path_finder) for i in range(0, self.maze.get_number_of_ghosts())]
 
         if self.sounds_active:
             self.init_mixer()
@@ -138,6 +138,7 @@ class Game(object):
     def start_game(self, restart=False):
         if restart:
             self.maze.reinit_map()
+            self.player.lives = 3
 
         self.set_mode(0)
         self.init_game()
@@ -209,7 +210,7 @@ class Game(object):
 
     def move_ghosts(self):
         for ghost in self.ghosts:
-            ghost.move(path_finder=self.path_finder, player=self.player)
+            ghost.move(player=self.player)
 
     def update_ghosts_position_in_map(self):
         self.maze.update_ghosts_position(self.ghosts)
@@ -346,6 +347,9 @@ class Game(object):
             else:
                 self.ghosts_timer += 1
 
+        for ghost in self.ghosts:
+            ghost.check_ghost_position(self.maze)
+
     def is_at_least_a_ghost_vulnerable(self) -> bool:
         return [ghost.state == GhostState.vulnerable for ghost in self.ghosts].count(True) > 0
 
@@ -433,7 +437,7 @@ class Game(object):
 
     def check_collision_with_ghosts(self):
         for ghost in self.ghosts:
-            if check_if_hit(self.player.x, self.player.y, ghost.x, ghost.y, TILE_SIZE // 2):
+            if check_if_hit(self.player.x, self.player.y, ghost.x, ghost.y, (3 * TILE_SIZE) // 4):
                 if ghost.state == GhostState.normal:
                     self.set_mode(GameMode.hit_ghost)
                     self.add_reward(-5)

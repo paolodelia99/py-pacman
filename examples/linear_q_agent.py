@@ -5,7 +5,6 @@ Q learning with linear function approximator
 import argparse
 import itertools
 import math
-import pickle
 from itertools import count
 from typing import Union, Tuple, Dict
 
@@ -25,6 +24,7 @@ class LinearApproximator:
         self.bias = 1.0
         self.learning_rate = 0.1
         self._n_features = n_features
+        self.n_actions = n_actions
 
     def predict(self, state: Union[list, np.array], action=None):
         if self.n_features != len(state):
@@ -44,19 +44,18 @@ class LinearApproximator:
                 ) * state[i]
 
     def save(self, path: str):
-        w_dict = dict(models=self._models, bias=self.bias)
-
-        with open(path, 'wb') as handle:
-            pickle.dump(w_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            handle.close()
+        with open(path, 'wb') as f:
+            np.save(f, np.array([weights for weights in list(self._models.values())]))
+            f.close()
 
     @property
     def models(self):
         return self._models
 
     @models.setter
-    def models(self, models: Dict[int, np.array]):
-        if len(models[0]) == self.n_features:
+    def models(self, weights: np.array):
+        if len(weights[0]) == self.n_features:
+            models = {i: weights[i] for i in range(self.n_actions)}
             self._models = models
         else:
             raise Exception("the number of input and the number of weight does not coincide")
@@ -66,9 +65,9 @@ class LinearApproximator:
         return self._n_features
 
     @staticmethod
-    def load(models: Dict[int, np.array], n_actions):
-        approximator = LinearApproximator(len(list(models['models'].values())[0]), n_actions)
-        approximator.models = models['models']
+    def load(models: np.array, n_actions):
+        approximator = LinearApproximator(len(models[0]), n_actions)
+        approximator.models = models
         approximator.bias = 1.0
 
         return approximator
@@ -83,9 +82,9 @@ class LinQAgent(Agent):
         self.layout = kwargs['layout']
         self.version = kwargs['version']
         if self.version is None:
-            self.filename = ''.join([self.name, '_', self.layout, '.pkl'])
+            self.filename = ''.join([self.name, '_', self.layout, '.npy'])
         else:
-            self.filename = ''.join([self.name, '_', self.layout, '_', self.version, '.pkl'])
+            self.filename = ''.join([self.name, '_', self.layout, '_', self.version, '.npy'])
         self.approximator = None
 
     def act(self, **kwargs):
@@ -102,10 +101,10 @@ class LinQAgent(Agent):
 
     def load_approximator(self):
         with open(self.filename, 'rb') as handle:
-            weights = pickle.load(handle)
+            model: np.array = np.load(handle)
             handle.close()
 
-        self.approximator = LinearApproximator.load(weights, 4)
+        self.approximator = LinearApproximator.load(model, 4)
 
     @staticmethod
     def get_state(player_position: Tuple[int, int], state_matrix: np.array, player_action: Action) -> np.array:
@@ -176,7 +175,7 @@ class LinQAgent(Agent):
         discount = 0.99
         epsilon = 1.0
         epsilon_min = 0.1
-        epsilon_decay = 5000000
+        epsilon_decay = 1e7
         env = gym.make('pacman-v0', layout=self.layout)
         env = SkipFrame(env, skip=5)
         approximator = LinearApproximator(6, env.action_space.n)
@@ -213,6 +212,9 @@ class LinQAgent(Agent):
                     print(f'win: {info["win"]}')
                     print(f'epsilon {epsilon}')
                     break
+
+            if episode % 1000 == 0:
+                approximator.save(self.filename)
 
         env.close()
 

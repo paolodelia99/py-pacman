@@ -7,16 +7,17 @@ from itertools import count
 import gym
 import numpy as np
 import torch
-import torch.autograd as autograd
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 import torchvision.transforms as T
-import torch.nn.functional as F
 from PIL import Image
 from gym.wrappers import FrameStack
 
 from replay_buffer import ReplayBuffer
 from wrappers import SkipFrame, GrayScaleObservation, ResizeObservation
+
+from src.env.pacman_env import PacmanEnv
 
 # if gpu is to be used
 USE_CUDA = torch.cuda.is_available()
@@ -25,13 +26,6 @@ device = torch.device("cuda" if USE_CUDA else "cpu")
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 steps_done = 0
-
-
-class Variable(autograd.Variable):
-    def __init__(self, data, *args, **kwargs):
-        if USE_CUDA:
-            data = data.cuda()
-        super(Variable, self).__init__(data, *args, **kwargs)
 
 
 class ReplayMemory(object):
@@ -166,7 +160,7 @@ def train_agent(layout: str, episodes: int = 10000, frames_to_skip: int = 4):
     GAMMA = 0.99
     EPSILON = 1.0
     EPS_END = 0.1
-    EPS_DECAY = 5000000
+    EPS_DECAY = 1e7
     TARGET_UPDATE = 10
     BATCH_SIZE = 64
 
@@ -176,12 +170,12 @@ def train_agent(layout: str, episodes: int = 10000, frames_to_skip: int = 4):
     # Get screen size so that we can initialize layers correctly based on shape
     # returned from AI gym. Typical dimensions at this point are close to 3x40x90
     # which is the result of a clamped and down-scaled render buffer in get_screen()
-    env = gym.make('pacman-v0', layout=layout)
+    env = PacmanEnv(layout=layout)
     env = SkipFrame(env, skip=frames_to_skip)
     env = GrayScaleObservation(env)
     env = ResizeObservation(env, shape=84)
     env = FrameStack(env, num_stack=4)
-    screen = env.reset()
+    screen = env.reset(mode='rgb_array')
 
     # Get number of actions from gym action space
     n_actions = env.action_space.n
@@ -196,7 +190,7 @@ def train_agent(layout: str, episodes: int = 10000, frames_to_skip: int = 4):
 
     for i_episode in range(episodes):
         # Initialize the environment and state
-        state = env.reset()
+        state = env.reset(mode='rgb_array')
         ep_reward = 0.
         EPSILON = epsilon_by_frame(i_episode)
 
@@ -237,7 +231,28 @@ def train_agent(layout: str, episodes: int = 10000, frames_to_skip: int = 4):
 
 
 def run_agent(layout: str):
-    raise NotImplementedError("Not yet implemented!")
+    env = PacmanEnv(layout)
+    env = SkipFrame(env, skip=4)
+    env = GrayScaleObservation(env)
+    env = ResizeObservation(env, shape=84)
+    env = FrameStack(env, num_stack=4)
+    screen = env.reset(mode='rgb_array')
+    n_actions = env.action_space.n
+
+    model = load_model(screen.shape, n_actions, 'pacman.pth')
+
+    for i in range(10):
+
+        env.render(mode='human')
+        screen = env.reset(mode='rgb_array')
+
+        for _ in count():
+            env.render(mode='human')
+            action = select_action(screen, 0, model, n_actions)
+            screen, reward, done, info = env.step(action)
+
+            if done:
+                break
 
 
 def parse_args():

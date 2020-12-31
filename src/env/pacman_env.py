@@ -60,6 +60,8 @@ class PacmanEnv(gym.Env):
         self.reinit_game = False
         self.player_lives = player_lives
 
+        self.observation_space = spaces.Space(shape=self.get_screen_rgb_array().shape, dtype=int)
+
         self.seed()
 
     def __del__(self):
@@ -88,7 +90,7 @@ class PacmanEnv(gym.Env):
         self.game.ghosts_timer = 0
         self.game.set_mode(GameMode.normal)
         self.game.make_ghosts_normal()
-        self.game.player.set_lives(self.player_lives)
+        self.game.player.lives = self.player_lives
         if mode == 'human':
             return self.get_state_matrix()
         elif mode == 'rgb_array':

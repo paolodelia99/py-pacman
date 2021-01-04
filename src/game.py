@@ -150,7 +150,6 @@ class Game(object):
         while self.is_run:
             self.init_screen()
             self.event_loop()
-            self.draw()
 
             self.check_game_mode()
 
@@ -158,6 +157,7 @@ class Game(object):
             if self.game_mode in MOVE_MODES:
                 self.move_players()
 
+            self.draw()
             pg.display.flip()
             self.clock.tick(60)
 
@@ -170,6 +170,8 @@ class Game(object):
                     player_pos=self.player.get_position(),
                     player_pixel_pos=self.player.get_pixel_pos(),
                     matrix=self.maze.get_state_matrix(),
+                    ghost_positions=[(ghost.nearest_col, ghost.nearest_row) \
+                                     for ghost in self.ghosts],
                     screen=pg.surfarray.pixels3d(self.prev_screen),
                     player_action=self.player.current_action)
                 action = int(action)

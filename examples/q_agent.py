@@ -8,6 +8,7 @@ import pickle
 import random
 from collections import defaultdict
 from itertools import count
+from typing import List, Tuple
 
 import numpy as np
 
@@ -35,9 +36,12 @@ class QAgent(Agent):
         if self.q_table is None:
             self.load_q_table()
 
-        state = QAgent.get_state(kwargs['player_pos'], kwargs['matrix'])
+        state = QAgent.get_state(kwargs['player_pos'], kwargs['ghost_positions'])
 
-        return np.argmax(self.q_table[state])
+        try:
+            return np.argmax(self.q_table[state])
+        except KeyError:
+            return random.randint(0, 3)
 
     def load_q_table(self):
         with open(self.filename, 'rb') as handle:
@@ -48,13 +52,8 @@ class QAgent(Agent):
         del self.q_table
 
     @staticmethod
-    def get_state(player_position, state_matrix):
-        g_y, g_x = np.where(state_matrix == -1)
-        try:
-            g_y, g_x = int(g_y[0]), int(g_x[0])
-        except IndexError:
-            g_y, g_x = np.where(state_matrix == 5)
-            g_y, g_x = int(g_y[0]), int(g_x[0])
+    def get_state(player_position, ghosts_positions: List[Tuple[int, int]]):
+        g_y, g_x = ghosts_positions[0][1], ghosts_positions[0][0]
 
         return player_position[0], player_position[1], g_x, g_y
 

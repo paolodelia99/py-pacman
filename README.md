@@ -108,6 +108,7 @@ For more examples check out the [`examples`](./examples) folder.
 
 # Todos
 
+- [ ] refactor everything using ECS
 - [ ] implement fruit
 - [ ] flashing power pellet
 - [x] state matrix in another screen

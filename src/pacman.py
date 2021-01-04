@@ -11,12 +11,13 @@ from src.utils.game_mode import GameMode
 class Pacman(object):
 
     def __init__(self):
-        self.lives = 3
+        self._lives = 3
         self.x = 0
         self.y = 0
         self.vel_x = 0
         self.vel_y = 0
         self.speed = 3
+        self._current_action = Action.LEFT
 
         self.nearest_row = 0
         self.nearest_col = 0
@@ -61,6 +62,9 @@ class Pacman(object):
 
     def get_position(self) -> Tuple[int, int]:
         return self.nearest_col, self.nearest_row
+
+    def get_pixel_pos(self) -> Tuple[int, int]:
+        return self.x, self.y
 
     def move(self, game):
         self.nearest_row = int(((self.y + TILE_SIZE / 2) / TILE_SIZE))
@@ -141,8 +145,24 @@ class Pacman(object):
                 self.vel_y = self.speed
                 self.vel_x = 0
 
-    def set_lives(self, lives):
-        self.lives = lives
+    @property
+    def lives(self):
+        return self._lives
+
+    @lives.setter
+    def lives(self, lives):
+        self._lives = lives
+
+    def get_vel(self) -> Tuple[int, int]:
+        return self.vel_x, self.vel_y
 
     def print_position(self):
         print(f"Pacman col: {self.nearest_col}, row: {self.nearest_row}")
+
+    @property
+    def current_action(self) -> Action:
+        return self._current_action
+
+    @current_action.setter
+    def current_action(self, action: Action):
+        self._current_action = action

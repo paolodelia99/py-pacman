@@ -1,10 +1,11 @@
 import os
-from typing import Optional
+from typing import Optional, Tuple
 
 import pygame as pg
 from pygame.surface import SurfaceType
 
 from src.constants import TILE_SIZE, VULNERABLE_GHOST_COLOR, WHITE_GHOST_COLOR, ROOT_DIR
+from src.map import Map
 from src.pacman import Pacman
 from src.utils.functions import get_image_surface
 from src.utils.game_mode import GameMode
@@ -15,7 +16,7 @@ from src.utils.path_finder import PathFinder
 class Ghost(object):
     img_glasses: SurfaceType
 
-    def __init__(self, ghost_id, ghost_color):
+    def __init__(self, ghost_id, ghost_color, path_finder: PathFinder):
         self.x = 0
         self.y = 0
         self.vel_x = 0
@@ -26,6 +27,7 @@ class Ghost(object):
         self.id = ghost_id
         self.state = GhostState.normal
         self.value = 0
+        self.path_finder = path_finder
 
         self.home_x = 0
         self.home_y = 0
@@ -132,21 +134,21 @@ class Ghost(object):
 
             self.anim_delay = 0
 
-    def move(self, path_finder: PathFinder, player: Pacman):
+    def move(self, player: Pacman):
         self.x += self.vel_x
         self.y += self.vel_y
 
         self.nearest_row = int(((self.y + TILE_SIZE / 2) / TILE_SIZE))
         self.nearest_col = int(((self.x + TILE_SIZE / 2) / TILE_SIZE))
 
-        self.check_ghost_state(path_finder, player)
+        self.check_ghost_state(self.path_finder, player)
 
         if (self.x % TILE_SIZE) == 0 and (self.y % TILE_SIZE) == 0:
             # ghost is lined up with the grid
             if self.current_path is not None and len(self.current_path) > 0:
                 self.follow_next_path()
             else:
-                self.find_path(path_finder=path_finder, player=player)
+                self.find_path(path_finder=self.path_finder, player=player)
 
     def find_path(self, path_finder: PathFinder, player: Optional[Pacman], random=False):
         if random:
@@ -202,6 +204,9 @@ class Ghost(object):
         self.value = 200
         self.speed = 2
 
+    def is_vulnerable(self) -> bool:
+        return self.state == GhostState.vulnerable
+
     def set_spectacles(self, path_finder: PathFinder, player: Pacman):
         self.state = GhostState.spectacles
         self.value = 0
@@ -239,6 +244,28 @@ class Ghost(object):
             self.state = GhostState.normal
             self.speed = 2
             self.find_path(path_finder, player)
+
+    def check_ghost_position(self, maze: Map):
+        try:
+            maze.state_matrix[self.nearest_row][self.nearest_col]
+        except IndexError:
+            self.x = self.home_x * TILE_SIZE
+            self.y = self.home_y * TILE_SIZE
+            self.nearest_col = self.home_x
+            self.nearest_row = self.home_y
+            self.find_path(self.path_finder, None, True)
+
+    def get_pixel_position(self) -> Tuple[int, int]:
+        """
+        :return: the (x, y) pixel position of the ghost
+        """
+        return self.x, self.y
+
+    def get_position(self) -> Tuple[int, int]:
+        """
+        :return: the (x, y) position of the ghost
+        """
+        return self.nearest_col, self.nearest_row
 
     def print_position(self):
         print(f"Ghost_{self.id} col: {self.nearest_col}, row: {self.nearest_row}")

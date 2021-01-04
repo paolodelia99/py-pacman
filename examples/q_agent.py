@@ -1,17 +1,22 @@
 """
-An example of how to make the ai agent work
+An example of how to make the ai agent work with naive q learning
 """
 
 import argparse
+import math
 import pickle
 import random
 from collections import defaultdict
+from itertools import count
+from typing import List, Tuple
 
 import numpy as np
 
 from src.controller import Controller
 from src.env.agent import Agent
 import gym
+
+from wrappers import SkipFrame
 
 
 class QAgent(Agent):
@@ -27,13 +32,16 @@ class QAgent(Agent):
             self.filename = ''.join([self.name, '_', self.layout, '_', self.version, '.pkl'])
         self.q_table = None
 
-    def act(self, state, **kwargs):
+    def act(self, **kwargs):
         if self.q_table is None:
             self.load_q_table()
 
-        state = QAgent.get_state(state, kwargs['matrix'])
+        state = QAgent.get_state(kwargs['player_pos'], kwargs['ghost_positions'])
 
-        return np.argmax(self.q_table[state])
+        try:
+            return np.argmax(self.q_table[state])
+        except KeyError:
+            return random.randint(0, 3)
 
     def load_q_table(self):
         with open(self.filename, 'rb') as handle:
@@ -44,33 +52,33 @@ class QAgent(Agent):
         del self.q_table
 
     @staticmethod
-    def get_state(player_position, state_matrix):
-        g_y, g_x = np.where(state_matrix == - 15)
-        if len(g_x) != 0 and len(g_y) != 0:
-            g_y, g_x = int(g_y[0]), int(g_x[0])
-        else:
-            g_y, g_x = np.where(state_matrix == 5)
-            g_y, g_x = int(g_y[0]), int(g_x[0])
+    def get_state(player_position, ghosts_positions: List[Tuple[int, int]]):
+        g_y, g_x = ghosts_positions[0][1], ghosts_positions[0][0]
 
         return player_position[0], player_position[1], g_x, g_y
 
-    def train(self, **kwargs):
-        n_episodes = 5000
+    def train(self, episodes, **kwargs):
+        n_episodes = episodes
         discount = 0.99
         alpha = 0.6  # learning rate
         epsilon = 1.0
         epsilon_min = 0.1
-        epsilon_decay_rate = 0.9999999
-        max_steps = 60
-        env = gym.make('pacman-v0', layout=self.layout, frame_to_skip=10)
+        epsilon_decay_rate = 1e6
+        env = gym.make('pacman-v0', layout=self.layout)
+        env = SkipFrame(env, skip=10)
         q_table = defaultdict(lambda: np.zeros(env.action_space.n))
         state = QAgent.get_state(env.game.maze.get_player_home(), env.get_state_matrix())
+
+        epsilon_by_frame = lambda frame_idx: epsilon_min + (epsilon - epsilon_min) * math.exp(
+            -1. * frame_idx / epsilon_decay_rate)
 
         for episode in range(n_episodes):
             env.reset()
             total_rewards = 0
 
-            for i in range(max_steps):
+            epsilon = epsilon_by_frame(episode)
+
+            for i in count():
                 env.render()
                 if random.uniform(0, 1) > epsilon:
                     action = int(np.argmax(q_table[state]))
@@ -78,7 +86,7 @@ class QAgent(Agent):
                     action = env.action_space.sample()
 
                 obs, rewards, done, info = env.step(action)
-                next_state = QAgent.get_state(info['player position'], obs)
+                next_state = QAgent.get_state(info['player position'], info['state matrix'])
 
                 if next_state != state:
                     rewards = rewards + 2 if rewards > 0 else rewards
@@ -94,9 +102,6 @@ class QAgent(Agent):
                     print(f'win: {info["win"]}')
                     break
 
-                if epsilon >= epsilon_min:
-                    epsilon *= epsilon_decay_rate
-
         env.close()
 
         with open(self.filename, 'wb') as handle:
@@ -104,16 +109,16 @@ class QAgent(Agent):
             handle.close()
 
 
-def train_agent(layout: str):
+def train_agent(layout: str, episodes: int = 5000):
     agent = QAgent(layout=layout, version='1')
 
-    agent.train()
+    agent.train(episodes=episodes)
 
 
 def run_agent(layout: str):
     agent = QAgent(layout=layout, version='1')
     agent.load_q_table()
-    controller = Controller(layout_name=layout, act_sound=True, act_state=True, ai_agent=agent)
+    controller = Controller(layout_name=layout, act_sound=True, act_state=False, ai_agent=agent)
     controller.load_menu()
 
 
@@ -123,6 +128,8 @@ def parse_args():
                         help="Name of layout to load in the game")
     parser.add_argument('-t', '--train', action='store_true',
                         help='Train the agent')
+    parser.add_argument('-e', '--episodes', type=int, nargs=1,
+                        help="The number of episode to use during training")
     parser.add_argument('-r', '--run', action='store_true',
                         help='run the trained agent')
 
@@ -135,7 +142,7 @@ if __name__ == '__main__':
     layout = args.layout[0]
 
     if args.train:
-        train_agent(layout)
+        train_agent(layout, episodes=args.episodes[0])
 
     if args.run:
         run_agent(layout)

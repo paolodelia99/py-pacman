@@ -37,6 +37,7 @@ class Game(object):
     img_game_over: SurfaceType
     img_ready: SurfaceType
     img_life: SurfaceType
+    prev_screen: SurfaceType
 
     def __init__(self, maze: Map, screen: Union[pg.SurfaceType, Any], sounds_active: bool, state_active: bool,
                  **kwargs):
@@ -70,8 +71,8 @@ class Game(object):
         self.draw_value = False
 
         self.player = Pacman()
-        self.ghosts = [Ghost(i, GHOST_COLORS[i]) for i in range(0, self.maze.get_number_of_ghosts())]
         self.path_finder = PathFinder(self.maze.matrix_from_lookup_table(PATH_FINDER_LOOKUP_TABLE))
+        self.ghosts = [Ghost(i, GHOST_COLORS[i], self.path_finder) for i in range(0, self.maze.get_number_of_ghosts())]
 
         if self.sounds_active:
             self.init_mixer()
@@ -137,6 +138,7 @@ class Game(object):
     def start_game(self, restart=False):
         if restart:
             self.maze.reinit_map()
+            self.player.lives = 3
 
         self.set_mode(0)
         self.init_game()
@@ -148,7 +150,6 @@ class Game(object):
         while self.is_run:
             self.init_screen()
             self.event_loop()
-            self.draw()
 
             self.check_game_mode()
 
@@ -156,6 +157,7 @@ class Game(object):
             if self.game_mode in MOVE_MODES:
                 self.move_players()
 
+            self.draw()
             pg.display.flip()
             self.clock.tick(60)
 
@@ -164,7 +166,14 @@ class Game(object):
             if self.ai_agent is None:
                 action = Game.check_keyboard_inputs()
             else:
-                action = self.ai_agent.act(state=self.player.get_position(), matrix=self.maze.get_state_matrix())
+                action = self.ai_agent.act(
+                    player_pos=self.player.get_position(),
+                    player_pixel_pos=self.player.get_pixel_pos(),
+                    matrix=self.maze.get_state_matrix(),
+                    ghost_positions=[(ghost.nearest_col, ghost.nearest_row) \
+                                     for ghost in self.ghosts],
+                    screen=pg.surfarray.pixels3d(self.prev_screen),
+                    player_action=self.player.current_action)
                 action = int(action)
 
             if action is not None:
@@ -203,7 +212,7 @@ class Game(object):
 
     def move_ghosts(self):
         for ghost in self.ghosts:
-            ghost.move(path_finder=self.path_finder, player=self.player)
+            ghost.move(player=self.player)
 
     def update_ghosts_position_in_map(self):
         self.maze.update_ghosts_position(self.ghosts)
@@ -218,6 +227,7 @@ class Game(object):
             ghost.draw(self.screen, self, self.player)
 
         draw_maze_th.join()
+        self.prev_screen = self.screen.copy()
 
     def draw_texts(self):
         self.draw_number(self.score, 0, self.maze.shape[0] * TILE_SIZE)
@@ -339,6 +349,9 @@ class Game(object):
             else:
                 self.ghosts_timer += 1
 
+        for ghost in self.ghosts:
+            ghost.check_ghost_position(self.maze)
+
     def is_at_least_a_ghost_vulnerable(self) -> bool:
         return [ghost.state == GhostState.vulnerable for ghost in self.ghosts].count(True) > 0
 
@@ -426,7 +439,7 @@ class Game(object):
 
     def check_collision_with_ghosts(self):
         for ghost in self.ghosts:
-            if check_if_hit(self.player.x, self.player.y, ghost.x, ghost.y, TILE_SIZE // 2):
+            if check_if_hit(self.player.x, self.player.y, ghost.x, ghost.y, (3 * TILE_SIZE) // 4):
                 if ghost.state == GhostState.normal:
                     self.set_mode(GameMode.hit_ghost)
                     self.add_reward(-5)

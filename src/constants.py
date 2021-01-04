@@ -73,11 +73,11 @@ TILE_LOOKUP_TABLE: Dict[int, str] = {
 
 # State Lookup table constants
 BLANK_SPACE_VALUE: int = 0
-WALL_VALUE: int = 0
+WALL_VALUE: int = -1
 GHOST_VALUE: int = -1
 PELLET_VALUE: int = 1
 POWER_PELLET_VALUE: int = 1
-
+GHOST_VULNERABLE_VALUE: int = 5
 
 STATE_LOOKUP_TABLE: Dict[int, int] = {
     10: BLANK_SPACE_VALUE,
@@ -115,7 +115,7 @@ STATE_COLOR_LOOKUP_TABLE: Dict[int, Tuple[int, int, int]] = {
     BLANK_SPACE_VALUE: (255, 204, 204),
     PELLET_VALUE: (255, 102, 102),
     POWER_PELLET_VALUE: (255, 0, 0),
-    5: (153, 0, 0),
+    GHOST_VULNERABLE_VALUE: (153, 0, 0),
     WALL_VALUE: (0, 0, 255),
     GHOST_VALUE: (51, 51, 255)
 }

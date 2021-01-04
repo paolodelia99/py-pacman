@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Any, Dict
 
 import gym
 import numpy as np
@@ -32,7 +32,7 @@ class PacmanEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 30}
     reward_range = (-10, 5)
 
-    def __init__(self, layout: str, frame_to_skip: int, enable_render=True, state_active=False, player_lives: int = 3):
+    def __init__(self, layout: str, enable_render=True, state_active=False, player_lives: int = 3):
         """
         PacmanEnv constructor
 
@@ -46,7 +46,6 @@ class PacmanEnv(gym.Env):
         self.enable_render = enable_render
         if enable_render:
             pg.init()
-        self.frame_to_skip = frame_to_skip
         self.action_space = spaces.Discrete(Action.__len__())
         self.maze = Map(layout)
         self.width, self.height = self.maze.get_map_sizes()
@@ -60,6 +59,8 @@ class PacmanEnv(gym.Env):
         self.timer = 0
         self.reinit_game = False
         self.player_lives = player_lives
+
+        self.observation_space = spaces.Space(shape=self.get_screen_rgb_array().shape, dtype=int)
 
         self.seed()
 
@@ -85,13 +86,17 @@ class PacmanEnv(gym.Env):
         self.game.restart()
         self.game.player.regenerate()
         self.game.score = 0
+        self.game.mode_timer = 0
+        self.game.ghosts_timer = 0
         self.game.set_mode(GameMode.normal)
         self.game.make_ghosts_normal()
-        self.game.player.set_lives(self.player_lives)
+        self.game.player.lives = self.player_lives
         if mode == 'human':
             return self.get_state_matrix()
         elif mode == 'rgb_array':
-            return self.get_rgb_array()
+            return self.get_screen_rgb_array()
+        elif mode == 'info':
+            return self.get_info_dict()
 
     def render(self, mode='human'):
         """
@@ -116,53 +121,48 @@ class PacmanEnv(gym.Env):
                 self.game.draw()
                 pg.display.flip()
         elif mode == 'rgb_array':
-            return self.get_rgb_array()
+            return self.get_screen_rgb_array()
 
     def close(self):
         self.__del__()
 
-    def act(self, action: Action):
+    def step(self, action: Union[Action, int]):
         """
-        Perform an action on the game. We lockstep frames with actions. If act is not called the game will not run.
-
-        :param action The index of the action we wish to perform
-
-        :returns: Returns the reward that the agent has accumulated while performing the action.
-
-        """
-        return sum(self._one_step_action(action) for _ in range(self.frame_to_skip))
-
-    def step(self, action: Union[Action, int], mode='human'):
-        """
-        Run the 'frame_to_skip' timestep of the environment's dynamics. When end of
+        Run one timestep of the environment's dynamics. When end of
         episode is reached, you are responsible for calling `reset()`
         to reset this environment's state.
 
         Accepts an action and returns a tuple (observation, reward, done, info).
 
         :param action: action to perform in the environment
-        :param mode: the rendering mode
         :return: a tuple containing the following: observation, reward, done, info
         """
-        prev_position: Tuple[int, int] = self.get_player_position()
-        prev_score: int = self.game.score
         action = Action(int(action)) if type(action) is int else action
-        rewards = self.act(action)
+        rewards = self._one_step_action(action)
         done = self.get_mode() == GameMode.game_over or self.get_mode() == GameMode.black_screen
-        obs = self.get_state_matrix() if mode == 'human' else self.get_rgb_array()
+        obs = self.get_screen_rgb_array()
+        info = self.get_info_dict()
+        return obs, rewards, done, info
+
+    def get_info_dict(self) -> Dict[str, Any]:
+        ghosts_pixel_pos = [ghost.get_pixel_position() for ghost in self.game.ghosts]
+        number_of_scared_ghosts = sum([ghost.is_vulnerable() for ghost in self.game.ghosts])
         info = {
             'win': self.get_mode() == GameMode.black_screen,
-            'prev position': prev_position,
             'player position': self.get_player_position(),
             'player pixel position': self.get_player_pixel_position(),
             'player lives': self.game.player.lives,
             'game mode': self.get_mode().value,
-            'game prev score': prev_score,
-            'game score': self.game.score
+            'game score': self.game.score,
+            'number of scared ghosts': number_of_scared_ghosts,
+            'state matrix': self.get_state_matrix(),
+            'ghosts_pixel_pos': ghosts_pixel_pos,
+            'player vel': self.game.player.get_vel(),
+            'player action': self.game.player.current_action
         }
-        return obs, rewards, done, info
+        return info
 
-    def _one_step_action(self, action: Union[Action, int]):
+    def _one_step_action(self, action: Union[Action, int]) -> int:
         """
         Performs only one step of the given action in the environment
 
@@ -243,5 +243,6 @@ class PacmanEnv(gym.Env):
 
         self.game.check_ghosts_state()
 
-    def get_rgb_array(self):
-        return pg.surfarray.pixels3d(self.game.screen)
+    def get_screen_rgb_array(self):
+        screen = self.game.screen.copy()
+        return pg.surfarray.pixels3d(screen)

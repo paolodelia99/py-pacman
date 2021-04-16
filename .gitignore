@@ -1,5 +1,7 @@
 .idea/
 
+.run/
+
 venv
 
 __pycache__/
